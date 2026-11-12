@@ -11,6 +11,8 @@ them goes into a game.
 - An experiment reaches play-test in about one PR.
 - Every experiment has a card (`experiments/CARD-TEMPLATE.md`), written before the build.
 
+Learning style (the five stages a fact moves through): `LEARNING-STYLE.md`.
+
 ## Pipeline
 idea → mockup → card → Lab build → play-test → verdict (keep / tweak / kill) → keep only → storyboard → game
 
@@ -23,6 +25,8 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 | `shared/log.js` | answer log in localStorage + JSON export |
 | `shared/choices.js` | multiple-choice options for a question row |
 | `data/facts/` | fact sets (CompTIA A+ Core 1 from DungeonCrawler) |
+| `data/media/` | pictures/sounds by entity id; `COVERAGE.md` = which have one |
+| `tools/media-check.mjs` | `npm run media`: rebuilds `data/media/COVERAGE.md` |
 | `experiments/` | one folder per experiment |
 | `experiments/mastery/` | experiment 1: mastery tiers (pick → evidence → type → rest) |
 
@@ -30,5 +34,6 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 ```
 npm run serve   # http://127.0.0.1:8001
 npm test
+npm run media   # which fact entities have a picture or sound
 ```
 Live: https://thepoeticheartishope.github.io/LearningLab/
