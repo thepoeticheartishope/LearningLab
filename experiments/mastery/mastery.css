@@ -1,0 +1,50 @@
+/* Mastery's placeholder look. No art on purpose. */
+:root { --right: #2e7d4f; --wrong: #b0413e; --gold: #a07a1c; }
+@media (prefers-color-scheme: dark) { :root { --right: #6fcf97; --wrong: #f08a85; --gold: #e0c060; } }
+.tabs { margin: 12px 0 20px; }
+button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--bg); }
+button:disabled { opacity: 0.6; cursor: default; }
+.small { font-size: 0.85rem; }
+section > p, section > div { margin: 8px 0; }
+.m-head { display: flex; justify-content: space-between; align-items: center; }
+.m-tier { font-weight: 700; letter-spacing: 0.04em; }
+.tier-2 { color: var(--accent); } .tier-3 { color: var(--gold); } .tier-4 { color: var(--right); }
+.m-credits { display: flex; gap: 10px; align-items: center; }
+.m-bar { flex: 1; height: 8px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.m-fill { height: 100%; background: var(--accent); }
+.m-question { font-size: 1.2rem; font-weight: 600; }
+.m-answer { font-weight: 600; }
+.m-options { display: grid; gap: 8px; }
+.m-option { text-align: left; }
+.m-option .letter { color: var(--muted); font-weight: 700; }
+.opt-right { border-color: var(--right); outline: 2px solid var(--right); }
+.opt-struck { text-decoration: line-through; border-color: var(--wrong); }
+input[type="text"] { font: inherit; flex: 1; min-width: 0; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
+.m-scene { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; line-height: 1.9; }
+.m-phrase { border-bottom: 2px dotted var(--muted); cursor: pointer; padding: 1px 2px; border-radius: 3px; }
+.m-phrase[aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+.m-phrase[aria-disabled="true"] { cursor: default; }
+.mark-found { color: var(--right); font-weight: 600; }
+.mark-missed { color: var(--gold); font-weight: 600; }
+.mark-false { color: var(--wrong); font-weight: 600; }
+/* Once checked, a phrase shows only its mark, never the picked fill. */
+.m-phrase[aria-disabled="true"] { background: none; color: inherit; }
+.m-phrase.mark-found { color: var(--right); border-bottom-style: solid; }
+.m-phrase.mark-missed { color: var(--gold); border-bottom-style: solid; }
+.m-phrase.mark-false { color: var(--wrong); border-bottom-style: solid; }
+.m-whys { padding-left: 20px; }
+.m-result.right, .right { color: var(--right); }
+.m-result.wrong, .wrong { color: var(--wrong); }
+.m-result { font-weight: 600; }
+.m-change { font-weight: 600; }
+.m-status { margin-top: 20px; }
+.m-dev { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); align-items: center; }
+h3 { font-size: 1rem; margin: 20px 0 6px; }
+.pick-list { list-style: none; padding: 0; margin: 0; }
+.pick-list li { padding: 4px 0; }
+.pick-list label { cursor: pointer; }
+.m-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.m-table th, .m-table td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.m-latest { list-style: none; padding: 0; font-size: 0.9rem; }
+.m-latest li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.m-table th:last-child, .m-table td:last-child { white-space: nowrap; }
