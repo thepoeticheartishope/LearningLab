@@ -21,8 +21,10 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 | `shared/factgen.js` | facts (entities + S·P·O facts + templates) → question rows |
 | `shared/facts.js` | loads `data/facts/<id>.json` and generates its questions |
 | `shared/log.js` | answer log in localStorage + JSON export |
+| `shared/choices.js` | multiple-choice options for a question row |
 | `data/facts/` | fact sets (CompTIA A+ Core 1 from DungeonCrawler) |
 | `experiments/` | one folder per experiment |
+| `experiments/mastery/` | experiment 1: mastery tiers (pick → evidence → type → rest) |
 
 ## Run
 ```

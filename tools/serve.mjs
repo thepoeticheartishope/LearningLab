@@ -15,6 +15,7 @@ const MIME = {
   '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.md': 'text/plain; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -25,7 +26,8 @@ const MIME = {
 
 const server = http.createServer((req, res) => {
   let reqPath = decodeURIComponent(req.url.split('?')[0]);
-  if (reqPath === '/') reqPath = '/index.html';
+  // A folder URL serves its index.html, as GitHub Pages does.
+  if (reqPath.endsWith('/')) reqPath += 'index.html';
   const filePath = path.join(root, reqPath);
 
   // Prevent escaping the repo root.
