@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning Lab</title>
+<link rel="stylesheet" href="shared/lab.css">
+</head>
+<body>
+<main>
+  <h1>Learning Lab</h1>
+  <p class="lead">One learning mechanic at a time, tested alone.</p>
+
+  <h2>Experiments</h2>
+  <ul class="list" id="experiments"></ul>
+
+  <h2>Fact sets</h2>
+  <ul class="list" id="sets"></ul>
+
+  <h2>Answer log</h2>
+  <p id="log-summary" class="muted"></p>
+  <div class="row">
+    <button id="log-export">Export log</button>
+    <button id="log-clear">Clear log</button>
+  </div>
+</main>
+<script type="module">
+import { EXPERIMENTS } from './shared/experiments.js';
+import { FACT_SETS } from './shared/config.js';
+import { loadFactSet } from './shared/facts.js';
+import { readLog, logSummary, downloadLog, clearLog } from './shared/log.js';
+import { escapeHtml } from './shared/text.js';
+
+const exps = document.getElementById('experiments');
+exps.innerHTML = EXPERIMENTS.length
+  ? EXPERIMENTS.map(e => `<li><a href="experiments/${e.id}/">${escapeHtml(e.name)}</a><span class="tag">${escapeHtml(e.status)}</span></li>`).join('')
+  : '<li class="muted">No experiments yet.</li>';
+
+const sets = document.getElementById('sets');
+sets.innerHTML = FACT_SETS.map(s => `<li id="set-${s.id}">${escapeHtml(s.name)}<span class="tag">loading…</span></li>`).join('');
+FACT_SETS.forEach(async (s) => {
+  const tag = document.querySelector(`#set-${s.id} .tag`);
+  try {
+    const set = await loadFactSet(s.id);
+    tag.textContent = `${set.data.facts.length} facts → ${set.questions.length} questions`;
+  } catch (err) {
+    tag.textContent = 'failed: ' + err.message;
+  }
+});
+
+function showLog() {
+  const { total, byExp } = logSummary(readLog());
+  const parts = Object.entries(byExp).map(([k, n]) => `${k}: ${n}`).join(', ');
+  document.getElementById('log-summary').textContent = total ? `${total} answers logged (${parts}).` : 'No answers logged yet.';
+}
+document.getElementById('log-export').onclick = () => downloadLog();
+document.getElementById('log-clear').onclick = () => {
+  if (confirm('Clear the whole answer log? Export it first if you want to keep it.')) { clearLog(); showLog(); }
+};
+showLog();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+/* Plain placeholder look shared by every Lab page. No art on purpose. */
+:root { --bg: #f6f6f4; --fg: #1d1d1b; --muted: #6b6b66; --line: #d6d6d0; --card: #fff; --accent: #2f5f8a; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #18181a; --fg: #e8e8e4; --muted: #9a9a94; --line: #34343a; --card: #222226; --accent: #8db8e0; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 18px/1.5 system-ui, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.5rem; margin: 0 0 4px; }
+h2 { font-size: 1.1rem; margin: 28px 0 8px; }
+p.lead, .muted { color: var(--muted); }
+ul.list { list-style: none; padding: 0; margin: 0; }
+ul.list li { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+a { color: var(--accent); }
+button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+button:hover { border-color: var(--accent); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag { font-size: 0.8rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
