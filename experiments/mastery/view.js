@@ -3,7 +3,8 @@
 // question after another; PICK chooses which facts are in; LOG shows each
 // picked fact's tier and the latest answers. Settles through mastery.js,
 // saves the record and the picks in localStorage, and writes every answer
-// to the Lab's shared answer log. With ?dev, buttons move the day on (to
+// to the Lab's shared answer log. STAGES walks any one fact through
+// stages 1–5 (stagesview.js) without touching any of that. With ?dev, buttons move the day on (to
 // test rests) and move the question showing a tier up or down.
 import { MASTERY, MASTERY_SET } from './config.js';
 import { newMasteryRecord, masteryKey, masteryDay, masteryNext, masteryTier, masteryTask, masteryCredits, masteryCounts, settleMastery, evidenceCheck, shiftMasteryTier } from './mastery.js';
@@ -11,6 +12,7 @@ import { loadFactSet } from '../../shared/facts.js';
 import { buildChoices } from '../../shared/choices.js';
 import { logAnswer, readLog } from '../../shared/log.js';
 import { answerKey, rightAnswers, escapeHtml } from '../../shared/text.js';
+import { initStages, showStages } from './stagesview.js';
 
 const isDev = new URLSearchParams(location.search).has('dev');
 const letters = ['A', 'B', 'C', 'D'];
@@ -23,6 +25,7 @@ const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
 const box = document.getElementById('practise');
 const pickBox = document.getElementById('pick');
 const logBox = document.getElementById('log');
+const stagesBox = document.getElementById('stages');
 
 // Every fact the experiment knows (generated + hand-written with
 // evidence), the record, the picked keys, and the question showing:
@@ -67,9 +70,11 @@ function showTab(name) {
   box.hidden = name !== 'practise';
   pickBox.hidden = name !== 'pick';
   logBox.hidden = name !== 'log';
+  stagesBox.hidden = name !== 'stages';
   if (name === 'practise') next();
   if (name === 'pick') drawPick();
   if (name === 'log') drawLog();
+  if (name === 'stages') showStages(open.picked);
 }
 tabs.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
@@ -485,6 +490,7 @@ async function start() {
       ...scenarios.map(q => ({ ...q, group: 'With evidence scenarios' })),
       ...set.questions.filter(q => !scenarioKeys.has(masteryKey(q))).map(q => ({ ...q, group: groupOf(q) })),
     ];
+    initStages(open.all, set.data);
   } catch (err) {
     box.textContent = 'Could not load the facts: ' + err.message;
     return;

@@ -24,8 +24,12 @@ learner than the one before. Example fact: **HTTPS uses port 443**.
 ## Where the Lab is now
 | Stage | In the Lab |
 |---|---|
-| 1 Association | not built; media coverage tracked by `npm run media` → `data/media/COVERAGE.md` |
+| 1 Association | Stages tab only (term + fact, picture/sound when one exists); media coverage tracked by `npm run media` → `data/media/COVERAGE.md` |
 | 2 Recognition | mastery tier 1 (pick from 4) |
-| 3 Reinforcement | not built (the S·P·O facts already hold the related facts) |
+| 3 Reinforcement | Stages tab only (lists the other S·P·O facts that share a term; most terms have just one fact so far) |
 | 4 Analysis | mastery tier 2 (tap the evidence; 8 facts with a scenario) |
 | 5 Free recall | mastery tier 3–4 (type it) |
+
+To test all five in a row on any fact: Mastery → **Stages 1–5** tab. Pick a
+fact, then step 1 → 5 (or jump to any stage). It never changes tiers or the
+answer log.
