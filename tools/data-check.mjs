@@ -62,6 +62,10 @@ export function checkFactSet(data, scenarios = []) {
     if (!tByPred.has(f.predicate)) errors.push(`Fact \`${key}\`: no template for predicate \`${f.predicate}\`.`);
     if (!f.source) errors.push(`Fact \`${key}\` has no source.`);
     else if (!SOURCE.test(f.source)) warnings.push(`Fact \`${key}\`: source "${f.source}" is not like "220-1201 3.2".`);
+    if (f.role !== undefined && (typeof f.role !== 'string' || !f.role.trim())) errors.push(`Fact \`${key}\`: role must be words, like "data".`);
+    else if (f.role && tByPred.has(f.predicate) && !tByPred.get(f.predicate).ask_object_role) {
+      warnings.push(`Fact \`${key}\` has role "${f.role}", but template \`${f.predicate}\` has no ask_object_role, so no role question is made.`);
+    }
   }
   for (const p of tByPred.keys()) if (!predUsed.has(p)) warnings.push(`Template \`${p}\` has no facts.`);
 

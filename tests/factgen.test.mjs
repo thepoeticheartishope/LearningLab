@@ -189,3 +189,45 @@ test('made-up numbers stay at 1 or more and within the template bounds', () => {
   const [q] = withRandom(0.5, () => generateQuestions(small));
   assert.deepEqual([...q.wrongTiers[2]].sort(), ['2']);
 });
+
+// Roles: one predicate, several objects that each do a different job.
+const roles = {
+  entities: [
+    { id: 'ftp', name: 'FTP', type: 'protocol' },
+    { id: 'dhcp', name: 'DHCP', type: 'protocol' },
+    { id: 'ssh', name: 'SSH', type: 'protocol' },
+  ],
+  facts: [
+    { subject: 'ftp', predicate: 'uses_port', object: 21, role: 'control' },
+    { subject: 'ftp', predicate: 'uses_port', object: 20, role: ' data ' },
+    { subject: 'dhcp', predicate: 'uses_port', object: 67, role: 'the server' },
+    { subject: 'dhcp', predicate: 'uses_port', object: 68, role: 'the client' },
+    { subject: 'ssh', predicate: 'uses_port', object: 22 },
+  ],
+  templates: [{ predicate: 'uses_port', exhaustive: ['ask_subject', 'ask_object'],
+    ask_object: 'Which port does {subject} use by default?',
+    ask_object_role: 'Which port does {subject} use for {role}?',
+    ask_subject: 'Which protocol uses port {object} by default?' }],
+};
+
+test('roles: one question per subject and role, the other role\'s answer offered first', () => {
+  const rows = generateQuestions(roles);
+  const data = ask(rows, 'Which port does FTP use for data?');
+  assert.equal(data.answer, '20');
+  assert.deepEqual(data.acceptedAnswers, ['20']);
+  assert.deepEqual(data.wrongTiers[0], ['21']);
+  assert.ok(!data.wrongTiers.slice(1).flat().includes('21'));
+  assert.ok(!data.wrongTiers.flat().includes('20'));
+  assert.deepEqual(data.fromFacts, [{ subject: 'ftp', predicate: 'uses_port', object: 20, role: 'data', asks: 'object' }]);
+  assert.equal(ask(rows, 'Which port does DHCP use for the client?').wrongTiers[0][0], '67');
+  // The plain question still accepts every port; the reverse still asks the protocol.
+  assert.deepEqual(ask(rows, 'Which port does FTP use by default?').acceptedAnswers, ['21', '20']);
+  assert.equal(ask(rows, 'Which protocol uses port 20 by default?').answer, 'FTP');
+  // No role, no role question.
+  assert.ok(!rows.some(r => r.question.includes('SSH use for')));
+});
+
+test('roles: no ask_object_role in the template, no role questions', () => {
+  const plain = { ...roles, templates: [{ ...roles.templates[0], ask_object_role: undefined }] };
+  assert.ok(!generateQuestions(plain).some(r => r.question.includes(' for ')));
+});
