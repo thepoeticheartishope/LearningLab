@@ -5,7 +5,7 @@
 // Also mountMapPanel(), the map + its tap panel, which the Stages tab's
 // stage 3 uses too. Nothing here changes the record or writes to the log.
 import { mountBubbleMap } from '../../shared/bubblemap.js';
-import { mapFor, mapTerms, sentencesFor } from '../../shared/termmap.js';
+import { mapFor, mapTerms, sentencesFor, missMap } from '../../shared/termmap.js';
 import { readTriples, tripleTemplates } from '../../shared/factgen.js';
 
 const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
@@ -51,6 +51,21 @@ export function mountMapPanel(host, map, focus = null) {
   if (first) show(first);
   else panel.append(el('p', 'muted small', 'Tap a bubble to read how it links. Drag one to move it.'));
   return { destroy() { m.destroy(); panel.remove(); } };
+}
+
+// After a miss in Practise (plan step B): the missed fact's term map,
+// review only, nothing to answer. Shows the unlocked links plus the missed
+// fact's own link, which is ringed and explained first. Appends to `box`
+// and returns { destroy }, or null when the fact has no map.
+export function mountMissReview(box, row, unlocked) {
+  const r = missMap(row, st.facts, st.templates, unlocked);
+  if (!r) return null;
+  const wrap = el('div', 'm-review');
+  const host = el('div', 'map-host');
+  wrap.append(el('h3', '', 'How it connects'), host);
+  box.append(wrap);
+  const p = mountMapPanel(host, r.map, r.focus);
+  return { destroy() { p.destroy(); wrap.remove(); } };
 }
 
 export function hideMap() {
