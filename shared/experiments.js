@@ -3,4 +3,5 @@
 // { id, name, status: 'building' | 'testing' | 'keep' | 'tweak' | 'kill' }
 export const EXPERIMENTS = [
   { id: 'mastery', name: 'Mastery tiers', status: 'testing' },
+  { id: 'bubbles', name: 'Bubble answers', status: 'testing' },
 ];

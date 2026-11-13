@@ -1,0 +1,23 @@
+/* Bubble answers' placeholder look. No art on purpose. */
+:root { --right: #2e7d4f; --wrong: #b0413e; }
+@media (prefers-color-scheme: dark) { :root { --right: #6fcf97; --wrong: #f08a85; } }
+button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--bg); }
+button:disabled { cursor: default; }
+.small { font-size: 0.85rem; }
+.b-switches { justify-content: space-between; margin: 12px 0 16px; }
+.b-top { display: flex; justify-content: space-between; }
+.b-bar { height: 6px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin: 4px 0 12px; }
+.b-fill { height: 100%; width: 0; background: var(--accent); }
+.b-question { font-size: 1.2rem; font-weight: 600; text-align: center; min-height: 1.8em; margin: 0 0 8px; }
+.b-feedback { text-align: center; min-height: 3em; }
+.b-feedback.right { color: var(--right); }
+.b-feedback.wrong { color: var(--wrong); }
+.b-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.b-buttons button { min-height: 64px; font-size: 1.1rem; font-weight: 600; }
+.b-buttons .ok { border: 3px solid var(--right); color: var(--right); }
+.b-buttons .bad { border: 3px solid var(--wrong); color: var(--wrong); }
+.b-buttons .faded { opacity: 0.3; }
+.b-next { justify-content: center; }
+.b-review { list-style: none; padding: 0; }
+.b-review li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.b-summary { margin-top: 24px; padding-top: 12px; border-top: 1px dashed var(--line); }
