@@ -16,15 +16,19 @@ export function makeBubble(label, value, r, W, H, rand = Math.random) {
 // One frame of movement for every bubble in `list`, inside a W × H box.
 // calm: no random drift and strong damping, no squash or wobble, so the
 // bubbles only move when pushed or dragged. drag: the bubble under the
-// finger (moved by the pointer, not here).
-export function stepBubbles(list, W, H, { calm = false, drag = null, rand = Math.random } = {}) {
+// finger (moved by the pointer, not here). links: optional [a, b] bubble
+// pairs held together by a spring (rest length a.r + b.r + linkGap), for
+// the bubble map; answer bubbles have none. space: how far apart bubbles
+// push (× their radii); pull: how hard every bubble drifts to the middle.
+export const LINK_GAP = 40;
+export function stepBubbles(list, W, H, { calm = false, drag = null, rand = Math.random, links = [], linkGap = LINK_GAP, space = 1.4, pull = 0.0015 } = {}) {
   // Push apart bubbles that are too close.
   for (let i = 0; i < list.length; i++) {
     for (let j = i + 1; j < list.length; j++) {
       const a = list[i], b = list[j];
       let dx = b.x - a.x, dy = b.y - a.y;
       const d = Math.hypot(dx, dy) || 1;
-      const m = (a.r + b.r + 12) * 1.4;
+      const m = (a.r + b.r + 12) * space;
       if (d < m) {
         const f = (m - d) * 0.004;
         dx /= d; dy /= d;
@@ -34,10 +38,18 @@ export function stepBubbles(list, W, H, { calm = false, drag = null, rand = Math
       if (!calm && d < a.r + b.r) { a.wv += 0.01; b.wv += 0.01; }
     }
   }
+  links.forEach(([a, b]) => {
+    let dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const f = (d - (a.r + b.r + linkGap)) * 0.012;
+    dx /= d; dy /= d;
+    a.vx += dx * f; a.vy += dy * f;
+    b.vx -= dx * f; b.vy -= dy * f;
+  });
   list.forEach((n) => {
     if (n !== drag) {
-      n.vx += (W / 2 - n.x) * 0.0015;
-      n.vy += (H / 2 - n.y) * 0.0015;
+      n.vx += (W / 2 - n.x) * pull;
+      n.vy += (H / 2 - n.y) * pull;
       if (!calm) { n.vx += (rand() - 0.5) * 0.06; n.vy += (rand() - 0.5) * 0.06; }
       const damp = calm ? 0.8 : 0.93;
       n.vx *= damp; n.vy *= damp;

@@ -6,7 +6,7 @@
 export const STAGES = [
   { n: 1, name: 'Association', task: 'See the term and the fact. Nothing to answer.' },
   { n: 2, name: 'Recognition', task: 'Pick the answer.' },
-  { n: 3, name: 'Reinforcement', task: 'Read what this fact depends on.' },
+  { n: 3, name: 'Reinforcement', task: 'See what the term links to. Tap a bubble to read the link.' },
   { n: 4, name: 'Analysis', task: 'Tap every phrase that is evidence for this answer.' },
   { n: 5, name: 'Free recall', task: 'Type the answer. No list, no hints.' },
 ];

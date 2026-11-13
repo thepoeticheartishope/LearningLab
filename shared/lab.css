@@ -1,7 +1,7 @@
 /* Plain placeholder look shared by every Lab page. No art on purpose. */
-:root { --bg: #f6f6f4; --fg: #1d1d1b; --muted: #6b6b66; --line: #d6d6d0; --card: #fff; --accent: #2f5f8a; }
+:root { --bg: #f6f6f4; --fg: #1d1d1b; --muted: #6b6b66; --line: #d6d6d0; --card: #fff; --accent: #2f5f8a; --map-risk: #a8661a; --map-defence: #2e7d4f; }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #18181a; --fg: #e8e8e4; --muted: #9a9a94; --line: #34343a; --card: #222226; --accent: #8db8e0; }
+  :root { --bg: #18181a; --fg: #e8e8e4; --muted: #9a9a94; --line: #34343a; --card: #222226; --accent: #8db8e0; --map-risk: #e0a85a; --map-defence: #6fcf97; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 18px/1.5 system-ui, sans-serif; }
