@@ -52,3 +52,4 @@ h3 { font-size: 1rem; margin: 20px 0 6px; }
 .s-bar { flex-wrap: wrap; margin: 12px 0; }
 .s-nav { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--line); }
 .s-pic { max-width: 160px; max-height: 160px; }
+.m-answer-mode { align-items: center; margin-bottom: 8px; }

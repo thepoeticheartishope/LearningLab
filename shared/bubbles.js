@@ -5,7 +5,7 @@
 // `answers` are strings; onPick(answer) runs on a tap (a press that moves
 // less than 6 px; a longer move drags the bubble). The page decides right
 // or wrong and calls b.mark(answer, 'ok' | 'bad'); b.dim() fades every
-// bubble not marked 'ok'. A hidden button row mirrors the bubbles so the
+// bubble not marked. A hidden button row mirrors the bubbles so the
 // keyboard and screen readers can answer too (it shows when focused).
 // Colours come from lab.css variables, read again when the theme changes.
 // The loop pauses while the tab is hidden; destroy() stops everything.
@@ -84,8 +84,34 @@ export function mountBubbles(el, { answers = [], onPick = () => {}, calm = false
     [...keys.children].forEach((b, i) => { if (list[i]) b.textContent = keyText(list[i]); });
   }
 
+  // How a label fits: its font, its lines (a long label with a space
+  // splits into two near the middle) and a radius big enough to hold them.
+  function fitLabel(label) {
+    const size = label.length > 6 ? 15 : 20;
+    const font = '600 ' + size + 'px system-ui, sans-serif';
+    ctx.font = font;
+    const width = t => ctx.measureText(t).width;
+    let lines = [label];
+    if (width(label) > 2 * RADIUS - 16 && label.includes(' ')) {
+      const mid = label.length / 2;
+      let cut = -1;
+      for (let i = 0; i < label.length; i++) if (label[i] === ' ' && (cut < 0 || Math.abs(i - mid) < Math.abs(cut - mid))) cut = i;
+      lines = [label.slice(0, cut), label.slice(cut + 1)];
+    }
+    const lineH = size + 3;
+    const w = Math.max(...lines.map(width));
+    const need = Math.hypot(w / 2, (lines.length * lineH) / 2) + 8;
+    const r = Math.min(Math.max(RADIUS, Math.ceil(need)), 80, H / 2 - 4);
+    return { font, lines, lineH, r };
+  }
+
   function setAnswers(next) {
-    list = next.map(a => makeBubble(a, a, RADIUS, W, H));
+    list = next.map((a) => {
+      const fit = fitLabel(String(a));
+      const n = makeBubble(a, a, fit.r, W, H);
+      n.fit = fit;
+      return n;
+    });
     drawKeys();
   }
 
@@ -108,8 +134,9 @@ export function mountBubbles(el, { answers = [], onPick = () => {}, calm = false
       ctx.globalAlpha = n.al;
       ctx.fillStyle = c[2];
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = '600 ' + (n.label.length > 6 ? 15 : 20) + 'px system-ui, sans-serif';
-      ctx.fillText(n.label, n.x, n.y);
+      const f = n.fit;
+      ctx.font = f.font;
+      f.lines.forEach((t, i) => ctx.fillText(t, n.x, n.y + (i - (f.lines.length - 1) / 2) * f.lineH));
       ctx.restore();
     });
   }
@@ -165,12 +192,14 @@ export function mountBubbles(el, { answers = [], onPick = () => {}, calm = false
   start();
 
   return {
+    node: wrap,     // the bubbles' element (move it with appendChild to keep it running across redraws)
     mark(answer, st) {
       list.forEach((n) => { if (n.value === answer) { n.st = st; if (!calm) n.wv += 0.2; } });
       updateKeys();
     },
-    dim() { list.forEach((n) => { n.dim = n.st !== 'ok'; }); },
+    dim() { list.forEach((n) => { n.dim = n.st === 'n'; }); },
     setAnswers,
+    resize: size,   // call once the element is on the page (it was measured when mounted)
     setCalm(on) { calm = !!on; },
     destroy() {
       dead = true;
