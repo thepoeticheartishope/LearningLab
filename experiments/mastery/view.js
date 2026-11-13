@@ -6,7 +6,9 @@
 // to the Lab's shared answer log. STAGES walks any one fact through
 // stages 1–5 (stagesview.js) without touching any of that. MAP
 // (mapview.js) browses the bubble map of the facts past Recognition; a
-// miss in PRACTISE shows the fact's map under the feedback (review only). With ?dev, buttons move the day on (to
+// miss in PRACTISE shows the fact's map under the feedback (review only),
+// and its FILL THE GAP mode is extra practice (logged, no tier moves).
+// With ?dev, buttons move the day on (to
 // test rests) and move the question showing a tier up or down.
 import { MASTERY, MASTERY_SET } from './config.js';
 import { newMasteryRecord, masteryKey, masteryDay, masteryNext, masteryTier, masteryTask, masteryCredits, masteryCounts, settleMastery, evidenceCheck, shiftMasteryTier } from './mastery.js';
@@ -562,8 +564,8 @@ function drawLog() {
     const when = new Date(e.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     li.append(
       el('span', e.right ? 'right' : 'wrong', e.right ? '✓ ' : '✗ '),
-      (q ? q.question : e.key) + ' ',
-      el('span', 'muted small', `${TIER_NAMES[e.task] || ''} · bet ${e.bet || '—'} · ${Math.round((e.ms || 0) / 100) / 10}s · ${when}${e.change ? ' · ' + e.change : ''}${e.given && !e.right ? ' · gave "' + e.given + '"' : ''}`),
+      (e.task === 'gap' ? e.sentence || e.key : q ? q.question : e.key) + ' ',
+      el('span', 'muted small', `${e.task === 'gap' ? 'FILL THE GAP' : TIER_NAMES[e.task] || ''} · bet ${e.bet || '—'} · ${Math.round((e.ms || 0) / 100) / 10}s · ${when}${e.change ? ' · ' + e.change : ''}${e.given && !e.right ? ' · gave "' + e.given + '"' : ''}`),
     );
     ul.append(li);
   });

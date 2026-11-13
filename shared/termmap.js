@@ -120,3 +120,55 @@ export function missMap(row, facts, templates, unlocked = null) {
   }
   return null;
 }
+
+// The node id of the gap bubble in a gapTask map.
+export const GAP_ID = '?gap';
+
+// A fill-the-gap task (bubble map plan step C; Timothy 2026-11-13: one
+// link blank, loose bubbles float near it, drag or tap the right one in).
+// Picks an unlocked link at random (never `lastKey` when another will do),
+// centres the map on its term and draws that link to an empty gap bubble
+// instead of its far end. Loose bubbles = the far end plus up to `most` - 1
+// wrong ones: the far ends of the same predicate on the same side from any
+// fact (locked too), never one that is true for this term. A link with no
+// wrong one to offer is not asked. Other links to the far end are left out
+// so the map never gives the answer away. Returns { map, key, line,
+// prompt ("DNS listens on ?" or "? runs over TCP"), sentence,
+// answer: { id, label }, loose: [{ id, label }] } or null.
+export function gapTask(facts, templates, unlocked = null, { lastKey = null, rand = Math.random, most = 4 } = {}) {
+  const all = drawable(facts, templates, null);
+  const open = drawable(facts, templates, unlocked);
+  const pick = list => list[Math.floor(rand() * list.length)];
+  const tasks = [];
+  open.forEach((d) => {
+    [[d.a, d.b, 'object'], [d.b, d.a, 'subject']].forEach(([centre, far, farSide]) => {
+      if (centre.number) return;
+      const sameSide = all.filter(o => o.f.predicate === d.f.predicate);
+      const farOf = o => (farSide === 'object' ? o.b : o.a);
+      const centreOf = o => (farSide === 'object' ? o.a : o.b);
+      const truth = new Set(sameSide.filter(o => centreOf(o).id === centre.id).map(o => farOf(o).id));
+      const wrong = new Map();
+      sameSide.forEach((o) => { const n = farOf(o); if (!truth.has(n.id)) wrong.set(n.id, { id: n.id, label: n.label }); });
+      if (wrong.size) tasks.push({ d, centre, far, wrong: [...wrong.values()] });
+    });
+  });
+  if (!tasks.length) return null;
+  const fresh = tasks.filter(t => t.d.key !== lastKey);
+  const t = pick(fresh.length ? fresh : tasks);
+
+  const base = mapFor(t.centre.id, facts, templates, unlocked) || { nodes: [{ id: t.centre.id, label: t.centre.label, kind: 'core' }], links: [] };
+  const answer = { id: t.far.id, label: t.far.label };
+  const links = base.links.filter(l => l.key !== t.d.key && l.from !== answer.id && l.to !== answer.id);
+  const keep = new Set([t.centre.id, ...links.flatMap(l => [l.from, l.to])]);
+  const nodes = base.nodes.filter(n => keep.has(n.id));
+  nodes.push({ id: GAP_ID, label: '?', kind: 'gap' });
+  const toGap = t.d.a.id === t.centre.id ? { from: t.centre.id, to: GAP_ID } : { from: GAP_ID, to: t.centre.id };
+  links.push({ key: t.d.key, ...toGap, line: t.d.m.line, kind: t.d.m.kind, sentence: t.d.sentence, gap: true });
+
+  const wrong = t.wrong.slice();
+  for (let i = wrong.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [wrong[i], wrong[j]] = [wrong[j], wrong[i]]; }
+  const loose = [answer, ...wrong.slice(0, most - 1)];
+  for (let i = loose.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [loose[i], loose[j]] = [loose[j], loose[i]]; }
+  const prompt = toGap.from === GAP_ID ? '? ' + t.d.m.line + ' ' + t.centre.label : t.centre.label + ' ' + t.d.m.line + ' ?';
+  return { map: { centre: nodes[0], nodes, links }, key: t.d.key, line: t.d.m.line, prompt, sentence: t.d.sentence, answer, loose };
+}
