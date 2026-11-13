@@ -614,6 +614,25 @@
     {"subject": "smb", "predicate": "uses_port", "object": 445, "source": "220-1201 2.1"},
     {"subject": "rdp", "predicate": "uses_port", "object": 3389, "source": "220-1201 2.1"},
 
+    {"subject": "dns", "predicate": "runs_over", "object": "udp", "source": "220-1201 2.1"},
+    {"subject": "dns", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "dhcp", "predicate": "runs_over", "object": "udp", "source": "220-1201 2.1"},
+    {"subject": "http", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "https", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "ssh", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "telnet", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "ftp", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "smtp", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "rdp", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "smb", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "ldap", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "pop3", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "imap", "predicate": "runs_over", "object": "tcp", "source": "220-1201 2.1"},
+    {"subject": "telnet", "predicate": "secure_version", "object": "ssh", "source": "220-1201 2.1"},
+    {"subject": "http", "predicate": "secure_version", "object": "https", "source": "220-1201 2.1"},
+    {"subject": "pop3", "predicate": "mail_sent_by", "object": "smtp", "source": "220-1201 2.1"},
+    {"subject": "imap", "predicate": "mail_sent_by", "object": "smtp", "source": "220-1201 2.1"},
+
     {"subject": "ipv4", "predicate": "bit_length", "object": 32, "source": "220-1201 2.6"},
     {"subject": "ipv6", "predicate": "bit_length", "object": 128, "source": "220-1201 2.6"},
     {"subject": "mac_address", "predicate": "bit_length", "object": 48, "source": "220-1201 2.5"},
@@ -631,6 +650,7 @@
   "templates": [
     {
       "predicate": "pin_count",
+      "map": {"line": "has", "object": "{object} pins"},
       "label": "{subject} pins",
       "category": "Hardware",
       "difficulty": "medium",
@@ -639,6 +659,7 @@
     },
     {
       "predicate": "module_pins",
+      "map": {"line": "has", "object": "{object} pins"},
       "label": "{subject} pins",
       "category": "Hardware",
       "difficulty": "hard",
@@ -647,6 +668,7 @@
     },
     {
       "predicate": "uses_port",
+      "map": {"line": "listens on", "object": "port {object}"},
       "label": "{subject} port",
       "category": "Networking",
       "difficulty": "medium",
@@ -656,6 +678,7 @@
     },
     {
       "predicate": "used_on",
+      "map": {"line": "used on"},
       "label": "{subject} cable",
       "category": "Hardware",
       "difficulty": "easy",
@@ -665,6 +688,7 @@
     },
     {
       "predicate": "bit_length",
+      "map": {"line": "is", "object": "{object} bits"},
       "label": "{subject} bit length",
       "category": "Networking",
       "difficulty": "medium",
@@ -673,6 +697,7 @@
     },
     {
       "predicate": "max_distance_meters",
+      "map": {"line": "reaches", "object": "{object} m"},
       "label": "{subject} max distance (m)",
       "category": "Networking",
       "difficulty": "medium",
@@ -681,10 +706,39 @@
     },
     {
       "predicate": "min_disks",
+      "map": {"line": "needs", "object": "{object} disks"},
       "label": "{subject} minimum disks",
       "category": "Hardware",
       "difficulty": "medium",
       "ask_object": "What is the minimum number of disks required to build a {subject} array?",
+      "exhaustive": ["ask_object"]
+    },
+    {
+      "predicate": "runs_over",
+      "label": "{subject} transport",
+      "map": {"line": "runs over"},
+      "category": "Networking",
+      "difficulty": "medium",
+      "ask_object": "Which transport protocol does {subject} use?",
+      "ask_subject": "Name a protocol that runs over {object}."
+    },
+    {
+      "predicate": "secure_version",
+      "label": "{subject} secure version",
+      "map": {"line": "replaced by", "kind": "defence"},
+      "category": "Networking",
+      "difficulty": "medium",
+      "ask_object": "Which protocol is the encrypted replacement for {subject}?",
+      "ask_subject": "{object} replaced which older protocol that sends data in plain text?",
+      "exhaustive": ["ask_object", "ask_subject"]
+    },
+    {
+      "predicate": "mail_sent_by",
+      "label": "{subject} sending protocol",
+      "map": {"line": "gets mail sent by"},
+      "category": "Networking",
+      "difficulty": "medium",
+      "ask_object": "{subject} downloads mail to a client. Which protocol sends the mail?",
       "exhaustive": ["ask_object"]
     }
   ]

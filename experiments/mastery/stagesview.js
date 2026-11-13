@@ -7,6 +7,7 @@ import { evidenceCheck, masteryKey } from './mastery.js';
 import { buildChoices } from '../../shared/choices.js';
 import { readTriples } from '../../shared/factgen.js';
 import { answerKey, rightAnswers, escapeHtml } from '../../shared/text.js';
+import { mapOfTerm, mountMapPanel } from './mapview.js';
 
 const PICTURE = ['svg', 'png', 'webp'];
 const SOUND = ['mp3', 'ogg', 'wav'];
@@ -16,7 +17,13 @@ const box = document.getElementById('stages');
 
 // The facts, the file's triples, the fact and stage showing, and the
 // stage's own state: options, the answer given, evidence picked / checked.
-const walk = { all: [], triples: { facts: [], labels: {} }, i: 0, stage: 1, choices: [], given: null, picked: new Set(), checked: null };
+const walk = { all: [], triples: { facts: [], labels: {} }, i: 0, stage: 1, choices: [], given: null, picked: new Set(), checked: null, map: null };
+
+// Stops stage 3's map (a redraw, another tab).
+export function hideStages() {
+  walk.map?.destroy();
+  walk.map = null;
+}
 
 export function initStages(all, data) {
   walk.all = all;
@@ -57,6 +64,7 @@ function button(text, onClick, className = '') {
 }
 
 function draw() {
+  hideStages();
   box.innerHTML = '';
   if (!walk.all.length) { box.append(el('p', 'muted', 'No facts loaded.')); return; }
   const q = walk.all[walk.i];
@@ -181,17 +189,30 @@ function resultLine(q, right) {
   box.append(el('p', 'm-result ' + (right ? 'right' : 'wrong'), right ? 'Right.' : 'Not this time. It was ' + q.answer + '.'));
 }
 
-// Stage 3: the fact, then every other fact that shares a term with it.
+// Stage 3: the fact, then its term's bubble map (every link, no unlock:
+// the walk is for testing), with the fact's own link explained first. A
+// fact with no map falls back to the plain list of related facts.
 function reinforcement(q) {
   box.append(el('p', 'm-question', q.question), el('p', 'm-answer', q.answer));
   noteLine(q);
-  const lines = relatedFacts(q, walk.triples);
   box.append(el('h3', '', 'What it connects to'));
-  if (!lines.length) box.append(el('p', 'muted', 'No related facts in the fact file yet.'));
-  else {
-    const ul = el('ul', 'm-whys');
-    lines.forEach(line => ul.append(el('li', '', line)));
-    box.append(ul);
+  const own = (q.fromFacts || [])[0];
+  const centres = own ? [own.subject] : factEntities(q, walk.triples);
+  const centre = centres.find(id => mapOfTerm(id, null));
+  if (centre) {
+    const map = mapOfTerm(centre, null);
+    const focus = own ? (typeof own.object === 'number' ? '#' + own.predicate + ':' + own.object : own.object) : null;
+    const host = el('div', 'map-host');
+    box.append(host);
+    walk.map = mountMapPanel(host, map, focus);
+  } else {
+    const lines = relatedFacts(q, walk.triples);
+    if (!lines.length) box.append(el('p', 'muted', 'No related facts in the fact file yet.'));
+    else {
+      const ul = el('ul', 'm-whys');
+      lines.forEach(line => ul.append(el('li', '', line)));
+      box.append(ul);
+    }
   }
   if (q.source) box.append(el('p', 'muted small', 'Source: ' + q.source));
 }

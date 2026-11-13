@@ -1,10 +1,11 @@
-// Mastery's page: three tabs. PRACTISE runs Mastery (adapted from
+// Mastery's page: five tabs. PRACTISE runs Mastery (adapted from
 // DungeonCrawler js/masteryview.js, v416) on the facts picked, one
 // question after another; PICK chooses which facts are in; LOG shows each
 // picked fact's tier and the latest answers. Settles through mastery.js,
 // saves the record and the picks in localStorage, and writes every answer
 // to the Lab's shared answer log. STAGES walks any one fact through
-// stages 1–5 (stagesview.js) without touching any of that. With ?dev, buttons move the day on (to
+// stages 1–5 (stagesview.js) without touching any of that. MAP
+// (mapview.js) browses the bubble map of the facts past Recognition. With ?dev, buttons move the day on (to
 // test rests) and move the question showing a tier up or down.
 import { MASTERY, MASTERY_SET } from './config.js';
 import { newMasteryRecord, masteryKey, masteryDay, masteryNext, masteryTier, masteryTask, masteryCredits, masteryCounts, settleMastery, evidenceCheck, shiftMasteryTier } from './mastery.js';
@@ -12,7 +13,9 @@ import { loadFactSet } from '../../shared/facts.js';
 import { buildChoices } from '../../shared/choices.js';
 import { logAnswer, readLog } from '../../shared/log.js';
 import { answerKey, rightAnswers, escapeHtml } from '../../shared/text.js';
-import { initStages, showStages } from './stagesview.js';
+import { initStages, showStages, hideStages } from './stagesview.js';
+import { initMap, showMap, hideMap } from './mapview.js';
+import { unlockedFacts } from '../../shared/termmap.js';
 import { mountBubbles } from '../../shared/bubbles.js';
 
 const isDev = new URLSearchParams(location.search).has('dev');
@@ -32,6 +35,7 @@ const box = document.getElementById('practise');
 const pickBox = document.getElementById('pick');
 const logBox = document.getElementById('log');
 const stagesBox = document.getElementById('stages');
+const mapBox = document.getElementById('map');
 
 // Every fact the experiment knows (generated + hand-written with
 // evidence), the record, the picked keys, and the question showing:
@@ -87,11 +91,15 @@ function showTab(name) {
   pickBox.hidden = name !== 'pick';
   logBox.hidden = name !== 'log';
   stagesBox.hidden = name !== 'stages';
+  mapBox.hidden = name !== 'map';
   if (name !== 'practise') dropBubbles();
+  if (name !== 'map') hideMap();
+  if (name !== 'stages') hideStages();
   if (name === 'practise') next();
   if (name === 'pick') drawPick();
   if (name === 'log') drawLog();
   if (name === 'stages') showStages(open.picked);
+  if (name === 'map') showMap(unlockedFacts(open.all, q => masteryTier(open.record, q) >= 2), isDev);
 }
 tabs.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
@@ -556,6 +564,7 @@ async function start() {
       ...set.questions.filter(q => !scenarioKeys.has(masteryKey(q))).map(q => ({ ...q, group: groupOf(q) })),
     ];
     initStages(open.all, set.data);
+    initMap(set.data);
   } catch (err) {
     box.textContent = 'Could not load the facts: ' + err.message;
     return;
@@ -574,6 +583,11 @@ const GROUPS = {
   'uses_port:subject': 'Protocol on a port',
   'used_on:object': 'Cable for a connector',
   'used_on:subject': 'Connector for a cable',
+  'runs_over:object': 'Transport of a protocol',
+  'runs_over:subject': 'Protocol over a transport',
+  'secure_version:object': 'Secure replacement',
+  'secure_version:subject': 'Older plain-text protocol',
+  'mail_sent_by:object': 'Mail sending protocol',
 };
 function groupOf(q) {
   const f = q.fromFacts && q.fromFacts[0];

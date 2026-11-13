@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { makeBubble, stepBubbles, hitBubble } from '../shared/bubblephysics.js';
+import { makeBubble, stepBubbles, hitBubble, LINK_GAP } from '../shared/bubblephysics.js';
 
 // A repeatable Math.random stand-in.
 function seeded(seed = 1) {
@@ -70,4 +70,19 @@ test('hit test: inside the radius (a little over), the top one wins, miss gives 
   assert.equal(hitBubble([a, b], 65, 100), a);
   assert.equal(hitBubble([a, b], 100, 143), a);   // 43 < 40 * 1.1
   assert.equal(hitBubble([a, b], 10, 10), null);
+});
+
+test('linked bubbles settle near their spring length and stay in the box', () => {
+  [false, true].forEach((calm) => {
+    const rand = seeded(11);
+    const W = 340, H = 380;
+    const list = ['DNS', '53', 'UDP', 'TCP', 'DHCP'].map(l => makeBubble(l, l, 36, W, H, rand));
+    const links = [[list[0], list[1]], [list[0], list[2]], [list[0], list[3]], [list[2], list[4]]];
+    for (let i = 0; i < 1500; i++) stepBubbles(list, W, H, { calm, rand, links });
+    list.forEach(n => assert.ok(inBox(n, W, H)));
+    links.forEach(([a, b]) => {
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      assert.ok(d > a.r + b.r && d < a.r + b.r + LINK_GAP + 80, 'link length ' + d);
+    });
+  });
 });
