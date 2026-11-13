@@ -50,6 +50,21 @@ test('the full map: centre first, one relationship only, kinds from the template
   assert.deepEqual(sentencesFor(m, 'https'), ['HTTP replaced by HTTPS.']);
 });
 
+test('a fact\'s role shows on its line and in its sentence', () => {
+  const withRole = {
+    entities: [{ id: 'ftp', name: 'FTP', type: 'protocol' }],
+    facts: [
+      { subject: 'ftp', predicate: 'uses_port', object: 21, role: 'control' },
+      { subject: 'ftp', predicate: 'uses_port', object: 20, role: 'data' },
+    ],
+    templates: [{ predicate: 'uses_port', map: { line: 'listens on', object: 'port {object}' } }],
+  };
+  const m = mapFor('ftp', readTriples(withRole).facts, tripleTemplates(withRole));
+  assert.deepEqual(m.links.map(l => l.line), ['listens on (control)', 'listens on (data)']);
+  assert.deepEqual(m.links.map(l => l.sentence), ['FTP listens on port 21 (control).', 'FTP listens on port 20 (data).']);
+  assert.equal(factKey(readTriples(withRole).facts[1]), 'ftp|uses_port|20');
+});
+
 test('locked links are not drawn', () => {
   const m = mapFor('http', facts, templates, new Set(['http|uses_port|80']));
   assert.deepEqual(m.nodes.map(n => n.id), ['http', '#uses_port:80']);

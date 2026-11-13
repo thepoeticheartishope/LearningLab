@@ -674,6 +674,7 @@
       "difficulty": "medium",
       "ask_subject": "Which protocol listens on port {object} by default?",
       "ask_object": "Which port does {subject} use by default?",
+      "ask_object_role": "Which port does {subject} use for {role}?",
       "exhaustive": ["ask_subject", "ask_object"]
     },
     {

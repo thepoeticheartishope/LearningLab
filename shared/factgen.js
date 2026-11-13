@@ -10,6 +10,13 @@
 // ask_object by (subject, predicate), ask_subject by (predicate, object).
 // A group's every right answer (and alias) goes in `acceptedAnswers`.
 //
+// Roles: a fact may carry an optional `role` ("data", "the server") when
+// one subject has several objects that each do a different job (FTP
+// port 20 for data, 21 for control). The plain questions stay as above;
+// a template's `ask_object_role` ("Which port does {subject} use for
+// {role}?") adds one question per (subject, role), whose first wrong
+// answers are the subject's other objects for that predicate.
+//
 // Open lists: the facts may not list every right answer, so a row is
 // `openList` unless its template lists that way in `exhaustive`. An open
 // row's wrong choices come from this file alone, and it is left out when
@@ -44,7 +51,7 @@ export function tripleTemplates(data) {
 }
 
 // The good facts of `data`, in file order, with their entities looked up:
-// { subject: entity, predicate, object: entity | number, source? }. Facts
+// { subject: entity, predicate, object: entity | number, source?, role? }. Facts
 // with an unknown id, no predicate or a bad object are left out.
 function readFacts(data, entities) {
   const out = [];
@@ -54,7 +61,8 @@ function readFacts(data, entities) {
     if (!subject) return;
     const object = typeof f.object === 'number' ? (Number.isFinite(f.object) ? f.object : null) : entities.get(f.object);
     if (object === null || object === undefined) return;
-    out.push({ subject, predicate: f.predicate, object, source: typeof f.source === 'string' && f.source.trim() ? f.source.trim() : undefined });
+    const role = typeof f.role === 'string' && f.role.trim() ? normalizeSpaces(f.role) : undefined;
+    out.push({ subject, predicate: f.predicate, object, source: typeof f.source === 'string' && f.source.trim() ? f.source.trim() : undefined, ...(role ? { role } : {}) });
   });
   return out;
 }
@@ -192,6 +200,7 @@ function questionRow(prompt, answers, group, wrongTiers, template, way) {
       subject: f.subject.id,
       predicate: f.predicate,
       object: typeof f.object === 'number' ? f.object : f.object.id,
+      ...(f.role ? { role: f.role } : {}),
       asks: way === 'ask_subject' ? 'subject' : 'object',
     })),
     generated: true,
@@ -237,6 +246,24 @@ export function generateQuestions(data, written = []) {
           ? numberWrongTiers(first, same.map(f => f.object).filter(o => typeof o === 'number'), setNumbers, rightKeys, template)
           : entityWrongTiers(same.map(f => f.object).filter(o => typeof o !== 'number'), first.type, linkedTo(subject, facts), rightKeys, inFacts);
         add(questionRow(fill(template.ask_object, { subject: subject.name }), answers, group, tiers, template, 'ask_object'));
+      });
+    }
+
+    if (typeof template.ask_object_role === 'string' && template.ask_object_role.trim()) {
+      groupFacts(same.filter(f => f.role), f => f.subject.id + '|' + keyOf(f.role)).forEach((group) => {
+        const subject = group[0].subject;
+        const answers = group.map(f => f.object);
+        const rightKeys = new Set(answers.map(a => keyOf(textOf(a))));
+        // The subject's other objects here (FTP 21 when 20 is asked) come first.
+        const others = same.filter(f => f.subject === subject && !group.includes(f)).map(f => f.object);
+        const sibling = distinct(others.map(textOf).filter(t => !rightKeys.has(keyOf(t))));
+        const sibKeys = new Set(sibling.map(keyOf));
+        const first = answers[0];
+        const rest = typeof first === 'number'
+          ? numberWrongTiers(first, same.map(f => f.object).filter(o => typeof o === 'number'), setNumbers, rightKeys, template)
+          : entityWrongTiers(same.map(f => f.object).filter(o => typeof o !== 'number'), first.type, linkedTo(subject, facts), rightKeys, inFacts);
+        const tiers = [sibling, ...rest.map(t => t.filter(x => !sibKeys.has(keyOf(x))))];
+        add(questionRow(fill(template.ask_object_role, { subject: subject.name, role: group[0].role }), answers, group, tiers, template, 'ask_object'));
       });
     }
 
