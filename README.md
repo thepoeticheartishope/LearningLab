@@ -31,6 +31,7 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 | `data/facts/` | fact sets (CompTIA A+ Core 1 from DungeonCrawler) |
 | `data/media/` | pictures/sounds by entity id; `COVERAGE.md` = which have one |
 | `tools/media-check.mjs` | `npm run media`: rebuilds `data/media/COVERAGE.md` |
+| `tools/data-check.mjs` | `npm run data`: data errors (exit 1) + gaps by area, objective and stage → `data/facts/GAPS.md` |
 | `experiments/` | one folder per experiment |
 | `experiments/mastery/` | experiment 1: mastery tiers (pick → evidence → type → rest); tier 1 answers as bubbles or buttons; Map tab = bubble map of the facts past Recognition |
 | `experiments/bubbles/` | experiment 2: bubble answers vs plain buttons (port facts, modes alternate per round) |
@@ -40,5 +41,6 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 npm run serve   # http://127.0.0.1:8001
 npm test
 npm run media   # which fact entities have a picture or sound
+npm run data    # data errors + where facts are thin → data/facts/GAPS.md
 ```
 Live: https://thepoeticheartishope.github.io/LearningLab/
