@@ -3,15 +3,23 @@
 // 2 or higher); locked links are not drawn at all, and a term with no
 // unlocked link is not in the list. With ?dev, a box shows every link.
 // Also mountMapPanel(), the map + its tap panel, which the Stages tab's
-// stage 3 uses too. Nothing here changes the record or writes to the log.
+// stage 3 uses too. FILL THE GAP (plan step C) is the tab's other mode:
+// one unlocked link is blank, loose bubbles float near it, drag or tap the
+// right one in. It is extra practice: it never changes the record (no
+// tiers move), but every answer goes to the shared log as
+// { exp: 'mastery', task: 'gap', key (fact key), given, right, ms, sentence }.
+// Browsing writes nothing.
 import { mountBubbleMap } from '../../shared/bubblemap.js';
-import { mapFor, mapTerms, sentencesFor, missMap } from '../../shared/termmap.js';
+import { mapFor, mapTerms, sentencesFor, missMap, gapTask } from '../../shared/termmap.js';
 import { readTriples, tripleTemplates } from '../../shared/factgen.js';
+import { logAnswer } from '../../shared/log.js';
+import { MASTERY_SET } from './config.js';
 
 const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
 
 const box = document.getElementById('map');
-const st = { facts: [], templates: new Map(), term: null, showAll: false, panel: null };
+const MODES = { look: 'Look around', gap: 'Fill the gap' };
+const st = { facts: [], templates: new Map(), term: null, showAll: false, panel: null, mode: 'look', gap: null, lastGap: null };
 
 export function initMap(data) {
   st.facts = readTriples(data).facts;
@@ -71,24 +79,95 @@ export function mountMissReview(box, row, unlocked) {
 export function hideMap() {
   st.panel?.destroy();
   st.panel = null;
+  st.gap = null;
+}
+
+function button(text, onClick, className = '') {
+  const b = el('button', className, text);
+  b.type = 'button';
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+// The two modes of the tab.
+function modeRow(unlocked, isDev) {
+  const row = el('div', 'row');
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', 'Map mode');
+  Object.entries(MODES).forEach(([mode, name]) => {
+    const b = button(name, () => { if (st.mode !== mode) { st.mode = mode; showMap(unlocked, isDev); } }, 'small');
+    b.setAttribute('aria-pressed', String(st.mode === mode));
+    row.append(b);
+  });
+  return row;
+}
+
+// FILL THE GAP: a new task from the unlocked links, drawn with its loose
+// bubbles. The first drop or tap answers; NEXT asks another.
+function showGap(unlocked, keys) {
+  const task = gapTask(st.facts, st.templates, keys, { lastKey: st.lastGap });
+  if (!task) {
+    box.append(el('p', 'muted', unlocked && !unlocked.size
+      ? 'Nothing to fill yet. Answer facts in Practise until one moves past Recognition.'
+      : 'Nothing to fill yet. The links you know have no wrong bubbles to mix in. Unlock more in Practise.'));
+    return;
+  }
+  st.lastGap = task.key;
+  const gap = { task, shownAt: Date.now(), answered: false };
+  st.gap = gap;
+  box.append(el('p', 'm-question', task.prompt));
+  box.append(el('p', 'muted small', 'Drag the right bubble into the gap, or tap it.'));
+  const host = el('div', 'map-host');
+  const out = el('div', 'map-panel');
+  out.setAttribute('aria-live', 'polite');
+  box.append(host, out);
+  const drop = (node) => {
+    if (gap.answered || st.gap !== gap) return;
+    gap.answered = true;
+    const right = node.id === task.answer.id;
+    logAnswer({ exp: 'mastery', set: MASTERY_SET, task: 'gap', key: task.key, given: node.label, right, ms: Date.now() - gap.shownAt, sentence: task.sentence });
+    m.remove(task.answer.id);
+    m.fillGap(task.answer.label, 'ok');
+    if (!right) m.mark(node.id, 'bad');
+    m.dimLoose();
+    out.append(el('p', 'm-result ' + (right ? 'right' : 'wrong'), right ? 'Right.' : 'Not this time. It was ' + task.answer.label + '.'));
+    out.append(el('p', '', task.sentence), el('p', 'muted small', 'Practice only: no tier moves.'));
+    const nextB = button('Next', () => showMap(unlocked, st.isDev));
+    out.append(nextB);
+    setTimeout(() => nextB.focus(), 0);
+  };
+  const m = mountBubbleMap(host, { map: task.map, loose: task.loose, onDrop: drop, calm: reducedMotion });
+  requestAnimationFrame(() => m.resize());
+  st.panel = { destroy() { m.destroy(); } };
 }
 
 // Draws the tab. `unlocked` = the fact keys past Recognition.
+// DEV only: a box that treats every link as unlocked.
+function devAll(unlocked, isDev) {
+  const label = el('label', 'small');
+  const cb = el('input');
+  cb.type = 'checkbox';
+  cb.checked = st.showAll;
+  cb.addEventListener('change', () => { st.showAll = cb.checked; showMap(unlocked, isDev); });
+  label.append(cb, ' DEV: show every link (locked too)');
+  return label;
+}
+
 export function showMap(unlocked, isDev) {
   hideMap();
+  st.isDev = isDev;
   box.innerHTML = '';
   const keys = st.showAll ? null : unlocked;
+  box.append(modeRow(unlocked, isDev));
+  if (st.mode === 'gap') {
+    box.append(el('p', 'muted small', 'Fill the gap in a link you know. Extra practice: it never moves a tier.'));
+    if (isDev) box.append(devAll(unlocked, isDev));
+    showGap(unlocked, keys);
+    return;
+  }
   const terms = mapTerms(st.facts, st.templates, keys);
   box.append(el('p', 'muted small', 'Check what you know. A link shows once its fact is past Recognition (tier 2) in Practise.'));
-  if (isDev) {
-    const label = el('label', 'small');
-    const cb = el('input');
-    cb.type = 'checkbox';
-    cb.checked = st.showAll;
-    cb.addEventListener('change', () => { st.showAll = cb.checked; showMap(unlocked, isDev); });
-    label.append(cb, ' DEV: show every link (locked too)');
-    box.append(label);
-  }
+  if (isDev) box.append(devAll(unlocked, isDev));
   if (!terms.length) {
     box.append(el('p', 'muted', 'Nothing here yet. Answer facts in Practise until one moves past Recognition.'));
     return;

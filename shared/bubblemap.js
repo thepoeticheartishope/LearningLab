@@ -13,6 +13,13 @@
 //
 // m.select(id) rings one bubble; m.mark(id, 'ok' | 'bad' | null) colours
 // one (for later steps); m.setMap(map) swaps the map.
+//
+// Fill the gap (plan step C): a map node of kind 'gap' (termmap.js
+// gapTask) is drawn as an empty dashed bubble on a dashed line, and
+// `loose` bubbles ({ id, label }) float free with no line. Dropping a loose
+// bubble on the gap, or tapping it, runs onDrop(node). m.fillGap(label,
+// st) writes the answer into the gap; m.remove(id) takes a loose bubble
+// away; m.dimLoose() fades the rest.
 
 import { makeBubble, stepBubbles, hitBubble, keepInBox } from './bubblephysics.js';
 
@@ -41,7 +48,7 @@ function addStyleOnce() {
   document.head.appendChild(s);
 }
 
-export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false } = {}) {
+export function mountBubbleMap(el, { map = null, loose = [], onPick = () => {}, onDrop = () => {}, calm = false } = {}) {
   addStyleOnce();
   const wrap = document.createElement('div');
   wrap.className = 'lab-map';
@@ -77,6 +84,8 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
     col.defence = [fill, v('--map-defence', '#2e7d4f'), v('--map-defence', '#2e7d4f')];
     col.ok = [fill, v('--right', '#2e7d4f'), v('--right', '#2e7d4f')];
     col.bad = [fill, v('--wrong', '#b0413e'), v('--wrong', '#b0413e')];
+    col.gap = [v('--card', '#fff'), v('--accent', '#2f5f8a'), v('--accent', '#2f5f8a')];
+    col.loose = [fill, fg, fg];
     col.line = muted; col.card = v('--card', '#fff'); col.lineText = muted;
   }
 
@@ -100,7 +109,9 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
     return { font, parts, lineH, r: Math.min(Math.max(base, Math.ceil(need)), 64) };
   }
 
-  const keyText = n => n.label + (n.id === selected ? ' (showing)' : n.st === 'ok' ? ' (right)' : n.st === 'bad' ? ' (wrong)' : '');
+  const keyText = n => (n.kind === 'loose' ? 'Put ' + n.label + ' in the gap' : n.kind === 'gap' ? 'Gap: ' + n.label : n.label)
+    + (n.id === selected ? ' (showing)' : n.st === 'ok' ? ' (right)' : n.st === 'bad' ? ' (wrong)' : '');
+  const tapped = n => (n.kind === 'loose' ? onDrop(n.node) : n.kind === 'gap' ? null : onPick(n.node));
 
   function drawKeys() {
     keys.innerHTML = '';
@@ -108,7 +119,7 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = keyText(n);
-      b.addEventListener('click', () => onPick(n.node));
+      b.addEventListener('click', () => tapped(n));
       keys.appendChild(b);
     });
   }
@@ -118,10 +129,10 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
 
   // New bubbles for `next`: the centre in the middle, the rest on a ring
   // around it (the springs then pull each to its own links).
-  function setMap(next) {
+  function setMap(next, nextLoose = []) {
     map = next;
     selected = null;
-    H = map && map.nodes.length > TALL_FROM ? TALL : HEIGHT;
+    H = map && map.nodes.length + nextLoose.length > TALL_FROM ? TALL : HEIGHT;
     size();
     const nodes = map ? map.nodes : [];
     const byId = new Map();
@@ -138,8 +149,15 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
       byId.set(node.id, n);
       return n;
     });
+    // Loose bubbles (fill the gap): anywhere in the box, no line.
+    nextLoose.forEach((node) => {
+      const fit = fitLabel(node.label, NODE_R);
+      const n = makeBubble(node.label, node.id, fit.r, W, H);
+      Object.assign(n, { id: node.id, node, kind: 'loose', fit, st: null });
+      list.push(n);
+    });
     const links = map ? map.links : [];
-    lines = links.map(l => ({ a: byId.get(l.from), b: byId.get(l.to), text: l.line, kind: l.kind })).filter(l => l.a && l.b);
+    lines = links.map(l => ({ a: byId.get(l.from), b: byId.get(l.to), text: l.line, kind: l.kind, gap: !!l.gap })).filter(l => l.a && l.b);
     pairs = lines.map(l => [l.a, l.b]);
     drawKeys();
   }
@@ -149,8 +167,10 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
     ctx.lineWidth = 1.5;
     lines.forEach((l) => {
       ctx.strokeStyle = l.kind === 'info' ? col.line : col[l.kind][1];
+      ctx.setLineDash(l.gap ? [6, 5] : []);
       ctx.beginPath(); ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); ctx.stroke();
     });
+    ctx.setLineDash([]);
     // Line labels: on a card-coloured patch at the middle of the line.
     ctx.font = '13px system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -170,8 +190,10 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
       const rx = n.r * (1 + n.sq + n.wo), ry = n.r * (1 - n.sq * 0.6 - n.wo * 0.6);
       ctx.ellipse(0, 0, Math.max(rx, 4), Math.max(ry, 4), 0, 0, Math.PI * 2);
       ctx.fillStyle = c[0]; ctx.fill();
-      ctx.lineWidth = n.id === selected || n.st ? 3.5 : n.kind === 'core' ? 2.5 : 1.5;
+      ctx.lineWidth = n.id === selected || n.st ? 3.5 : n.kind === 'core' || n.kind === 'gap' ? 2.5 : 1.5;
+      ctx.setLineDash(n.kind === 'gap' && !n.st ? [6, 5] : []);
       ctx.strokeStyle = c[1]; ctx.stroke();
+      ctx.setLineDash([]);
       ctx.restore();
       // The label: upright, never squashed or wobbled with the shape.
       ctx.save();
@@ -219,7 +241,9 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
     const n = drag;
     drag = null;
     cv.style.cursor = '';
-    if (moved < TAP_PX) onPick(n.node);
+    const gap = n.kind === 'loose' && list.find(b => b.kind === 'gap');
+    if (gap && Math.hypot(n.x - gap.x, n.y - gap.y) < n.r + gap.r) onDrop(n.node);
+    else if (moved < TAP_PX) tapped(n);
   }
   const onVisible = () => (document.hidden ? stop() : start());
   const dark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -233,7 +257,7 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
   dark?.addEventListener?.('change', readColours);
 
   readColours();
-  setMap(map);
+  setMap(map, loose);
   start();
 
   return {
@@ -249,6 +273,22 @@ export function mountBubbleMap(el, { map = null, onPick = () => {}, calm = false
       list.forEach((n) => { if (n.id === id) { n.st = st || null; if (!calm) n.wv += 0.2; } });
       updateKeys();
     },
+    fillGap(label, st) {
+      const g = list.find(n => n.kind === 'gap');
+      if (!g) return;
+      g.fit = fitLabel(label, NODE_R);
+      Object.assign(g, { label, r: g.fit.r, st: st || null });
+      lines.forEach((l) => { if (l.a === g || l.b === g) l.gap = false; });
+      if (!calm) g.wv += 0.25;
+      updateKeys();
+    },
+    remove(id) {
+      const i = list.findIndex(n => n.id === id && n.kind === 'loose');
+      if (i < 0) return;
+      list.splice(i, 1);
+      drawKeys();
+    },
+    dimLoose() { list.forEach((n) => { if (n.kind === 'loose' && !n.st) n.dim = true; }); },
     resize: size,   // call once the element is on the page (it was measured when mounted)
     setCalm(on) { calm = !!on; },
     destroy() {
