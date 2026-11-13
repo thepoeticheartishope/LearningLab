@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 
 import { readTriples, tripleTemplates } from '../shared/factgen.js';
 import { questionsFrom } from '../shared/facts.js';
-import { factKey, unlockedFacts, mapFor, mapTerms, sentencesFor, TERM_MAP } from '../shared/termmap.js';
+import { factKey, unlockedFacts, mapFor, mapTerms, sentencesFor } from '../shared/termmap.js';
 
 const data = {
   entities: [
@@ -40,24 +40,20 @@ test('a fact key is subject|predicate|object by ids', () => {
   assert.equal(factKey({ subject: 'http', predicate: 'runs_over', object: 'tcp' }), 'http|runs_over|tcp');
 });
 
-test('the full map: centre first, kinds from the template, numbers read through map.object', () => {
+test('the full map: centre first, one relationship only, kinds from the template', () => {
   const m = mapFor('http', facts, templates);
   assert.deepEqual(m.centre, { id: 'http', label: 'HTTP', kind: 'core' });
-  assert.deepEqual(m.nodes.map(n => n.label), ['HTTP', 'port 80', 'TCP', 'HTTPS', 'port 443']);
+  // HTTPS's own port and HTTPS–TCP are a second step away: not drawn.
+  assert.deepEqual(m.nodes.map(n => n.label), ['HTTP', 'port 80', 'TCP', 'HTTPS']);
   assert.equal(m.nodes.find(n => n.id === 'https').kind, 'defence');
-  // HTTPS–TCP joins two bubbles already on the map, so it is drawn too.
-  assert.equal(m.links.length, 5);
-  assert.deepEqual(sentencesFor(m, 'https'), ['HTTPS listens on port 443.', 'HTTPS runs over TCP.', 'HTTP replaced by HTTPS.']);
+  assert.equal(m.links.length, 3);
+  assert.deepEqual(sentencesFor(m, 'https'), ['HTTP replaced by HTTPS.']);
 });
 
-test('locked links are not drawn; ring 2 needs its ring-1 link', () => {
-  const only = new Set(['http|uses_port|80']);
-  const m = mapFor('http', facts, templates, only);
+test('locked links are not drawn', () => {
+  const m = mapFor('http', facts, templates, new Set(['http|uses_port|80']));
   assert.deepEqual(m.nodes.map(n => n.id), ['http', '#uses_port:80']);
   assert.equal(m.links.length, 1);
-  // HTTPS's own facts are unlocked, but the HTTP → HTTPS link is not.
-  const m2 = mapFor('http', facts, templates, new Set(['http|uses_port|80', 'https|uses_port|443']));
-  assert.ok(!m2.nodes.some(n => n.id === '#uses_port:443'));
   assert.equal(mapFor('http', facts, templates, new Set()), null);
 });
 
@@ -80,16 +76,12 @@ test('unlocked facts come from the rows that pass, through fromFacts', () => {
   assert.deepEqual([...unlockedFacts(rows, q => q.tier >= 2)], ['http|uses_port|80']);
 });
 
-test('real set: a hub is not opened up, a small ring is', () => {
+test('real set: DNS shows only its own links', () => {
   const real = JSON.parse(readFileSync(new URL('../data/facts/comptia-aplus.json', import.meta.url), 'utf8'));
   const f = readTriples(real).facts, t = tripleTemplates(real);
   const dns = mapFor('dns', f, t);
-  assert.ok(dns.nodes.some(n => n.id === 'tcp'));
-  assert.ok(dns.nodes.some(n => n.id === 'dhcp'), 'UDP is small, so its DHCP shows');
-  assert.ok(!dns.nodes.some(n => n.id === 'ssh'), 'TCP is a hub, so its protocols stay out');
-  const tcp = mapFor('tcp', f, t);
-  assert.ok(tcp.nodes.length - 1 > TERM_MAP.ringTwoUpTo);
-  assert.ok(!tcp.nodes.some(n => n.id.startsWith('#')), 'a big ring 1 gets no ring 2');
+  assert.deepEqual(dns.nodes.map(n => n.label).sort(), ['DNS', 'TCP', 'UDP', 'port 53']);
+  assert.ok(dns.links.every(l => l.from === 'dns' || l.to === 'dns'));
   // Every fact a question row asks about has a map.
   questionsFrom(real).forEach(q => assert.ok(mapFor(q.fromFacts[0].subject, f, t), q.question));
 });

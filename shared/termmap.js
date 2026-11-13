@@ -10,14 +10,9 @@
 // `unlocked` = a Set of fact keys (factKey) the learner may see, or null
 // for every fact. A locked fact is not drawn at all.
 //
-// Ring 1 = the centre's facts. Ring 2 (only while ring 1 is small) = the
-// facts of ring-1 terms that are not hubs, so HTTP shows HTTPS and then
-// HTTPS's port, but DNS does not pull in every protocol over TCP.
-
-export const TERM_MAP = {
-  ringTwoUpTo: 4,   // ring 2 is added only when ring 1 has at most this many bubbles
-  hubLinks: 4,      // a ring-1 term with more links than this is not opened up
-};
+// One relationship only (Timothy 2026-11-13): the map is the centre and
+// its own links. A neighbour's links (UDP → DHCP on DNS's map) and links
+// between neighbours are not drawn.
 
 const KINDS = ['info', 'risk', 'defence'];
 
@@ -76,24 +71,15 @@ function drawable(facts, templates, unlocked) {
 export function mapFor(entityId, facts, templates, unlocked = null) {
   const all = drawable(facts, templates, unlocked);
   const touches = (d, id) => d.a.id === id || d.b.id === id;
-  const ring1 = all.filter(d => touches(d, entityId));
-  if (!ring1.length) return null;
-  const centreNode = ring1[0].a.id === entityId ? ring1[0].a : ring1[0].b;
+  const own = all.filter(d => touches(d, entityId));
+  if (!own.length) return null;
+  const centreNode = own[0].a.id === entityId ? own[0].a : own[0].b;
 
   const nodes = new Map([[entityId, { id: entityId, label: centreNode.label, kind: 'core' }]]);
   const addNode = (n, kind) => { if (!nodes.has(n.id)) nodes.set(n.id, { id: n.id, label: n.label, kind }); };
-  ring1.forEach(d => addNode(d.a.id === entityId ? d.b : d.a, d.m.kind));
+  own.forEach(d => addNode(d.a.id === entityId ? d.b : d.a, d.m.kind));
 
-  if (nodes.size - 1 <= TERM_MAP.ringTwoUpTo) {
-    [...nodes.values()].slice(1).forEach((n) => {
-      const own = all.filter(d => touches(d, n.id));
-      if (own.length > TERM_MAP.hubLinks) return;
-      own.forEach(d => addNode(d.a.id === n.id ? d.b : d.a, d.m.kind));
-    });
-  }
-
-  const links = all
-    .filter(d => nodes.has(d.a.id) && nodes.has(d.b.id))
+  const links = own
     .map(d => ({ key: d.key, from: d.a.id, to: d.b.id, line: d.m.line, kind: d.m.kind, sentence: d.sentence }));
   return { centre: nodes.get(entityId), nodes: [...nodes.values()], links };
 }

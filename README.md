@@ -26,7 +26,7 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 | `shared/choices.js` | multiple-choice options for a question row |
 | `shared/bubbles.js` | floating answer bubbles: `mountBubbles(el, { answers, onPick })` → `{ mark, dim, setAnswers, setCalm, destroy }` |
 | `shared/bubblephysics.js` | the bubbles' movement maths (no DOM); optional springs for the map |
-| `shared/termmap.js` | a term's bubble map from the facts (no DOM): `mapFor(entityId, facts, templates, unlocked)`; a template's `map` entry = its line label and colour |
+| `shared/termmap.js` | a term's bubble map from the facts (no DOM; the term and its own links only): `mapFor(entityId, facts, templates, unlocked)`; a template's `map` entry = its line label and colour |
 | `shared/bubblemap.js` | the bubble map on a canvas: `mountBubbleMap(el, { map, onPick })` → `{ setMap, select, mark, destroy }` |
 | `data/facts/` | fact sets (CompTIA A+ Core 1 from DungeonCrawler) |
 | `data/media/` | pictures/sounds by entity id; `COVERAGE.md` = which have one |
