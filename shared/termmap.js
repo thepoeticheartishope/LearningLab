@@ -99,3 +99,24 @@ export function mapTerms(facts, templates, unlocked = null) {
 export function sentencesFor(map, id) {
   return map ? map.links.filter(l => l.from === id || l.to === id).map(l => l.sentence) : [];
 }
+
+// The review map after a miss (bubble map plan step B): the map of the
+// missed row's own fact, centred on its subject (or its object when the
+// subject has no map), with the unlocked links plus the missed fact's own
+// link (its answer was just shown, so it is no secret). `focus` = the
+// node on the far end of that link, to ring and explain first. A row with
+// no fromFacts, or no drawable fact, gives null.
+export function missMap(row, facts, templates, unlocked = null) {
+  const own = (row && row.fromFacts || [])[0];
+  if (!own) return null;
+  const ownKey = factKey(own);
+  const keys = unlocked ? new Set([...unlocked, ownKey]) : null;
+  const ids = [own.subject, own.object].filter(s => typeof s === 'string');
+  for (const id of ids) {
+    const map = mapFor(id, facts, templates, keys);
+    if (!map || !map.links.some(l => l.key === ownKey)) continue;
+    const link = map.links.find(l => l.key === ownKey);
+    return { map, focus: link.from === id ? link.to : link.from };
+  }
+  return null;
+}

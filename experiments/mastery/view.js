@@ -5,7 +5,8 @@
 // saves the record and the picks in localStorage, and writes every answer
 // to the Lab's shared answer log. STAGES walks any one fact through
 // stages 1–5 (stagesview.js) without touching any of that. MAP
-// (mapview.js) browses the bubble map of the facts past Recognition. With ?dev, buttons move the day on (to
+// (mapview.js) browses the bubble map of the facts past Recognition; a
+// miss in PRACTISE shows the fact's map under the feedback (review only). With ?dev, buttons move the day on (to
 // test rests) and move the question showing a tier up or down.
 import { MASTERY, MASTERY_SET } from './config.js';
 import { newMasteryRecord, masteryKey, masteryDay, masteryNext, masteryTier, masteryTask, masteryCredits, masteryCounts, settleMastery, evidenceCheck, shiftMasteryTier } from './mastery.js';
@@ -14,7 +15,7 @@ import { buildChoices } from '../../shared/choices.js';
 import { logAnswer, readLog } from '../../shared/log.js';
 import { answerKey, rightAnswers, escapeHtml } from '../../shared/text.js';
 import { initStages, showStages, hideStages } from './stagesview.js';
-import { initMap, showMap, hideMap } from './mapview.js';
+import { initMap, showMap, hideMap, mountMissReview } from './mapview.js';
 import { unlockedFacts } from '../../shared/termmap.js';
 import { mountBubbles } from '../../shared/bubbles.js';
 
@@ -45,7 +46,7 @@ const mapBox = document.getElementById('map');
 const open = {
   all: [], record: newMasteryRecord(), picked: new Set(),
   q: null, tier: 1, task: 1, choices: [], bet: 0, answered: null, picked2: new Set(), checked: null, shownAt: 0,
-  answerMode: 'bubbles', bub: null, bubHost: null, bubMarked: false,
+  answerMode: 'bubbles', bub: null, bubHost: null, bubMarked: false, review: null,
 };
 
 // ---------- storage ----------
@@ -67,10 +68,24 @@ open.answerMode = ANSWER_MODES[loadJson('answers', 'bubbles')] ? loadJson('answe
 
 // Stops the question's bubbles (a new question, another tab, buttons picked).
 function dropBubbles() {
+  dropReview();
   open.bub?.destroy();
   open.bub = null;
   open.bubHost = null;
   open.bubMarked = false;
+}
+
+// Stops the after-miss map.
+function dropReview() {
+  open.review?.destroy();
+  open.review = null;
+}
+
+// After a miss: the fact's bubble map under the feedback, review only.
+function missReview() {
+  if (!open.answered || open.answered.right) return;
+  const unlocked = unlockedFacts(open.all, q => masteryTier(open.record, q) >= 2);
+  open.review = mountMissReview(box, open.q, unlocked);
 }
 
 // Today's day number, moved on by DEV's skipped days.
@@ -170,6 +185,7 @@ function button(text, onClick, className = '') {
 }
 
 function draw() {
+  dropReview();
   box.innerHTML = '';
   if (!pickedFacts().length) {
     box.append(el('p', 'muted', 'No facts picked yet.'), button('Pick facts', () => showTab('pick')));
@@ -194,10 +210,13 @@ function draw() {
     box.append(evidenceScene());
     if (open.answered) box.append(...resultLines());
     if (open.checked) box.append(...evidenceLines());
+    missReview();
     box.append(evidenceButtons());
   } else {
     box.append(task === 1 ? optionList() : typedRow());
-    if (open.answered) box.append(...resultLines(), nextRow());
+    if (open.answered) box.append(...resultLines());
+    missReview();
+    if (open.answered) box.append(nextRow());
   }
   box.append(statusLine());
   if (isDev) box.append(devRow());

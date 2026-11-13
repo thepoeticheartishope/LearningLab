@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 
 import { readTriples, tripleTemplates } from '../shared/factgen.js';
 import { questionsFrom } from '../shared/facts.js';
-import { factKey, unlockedFacts, mapFor, mapTerms, sentencesFor } from '../shared/termmap.js';
+import { factKey, unlockedFacts, mapFor, mapTerms, sentencesFor, missMap } from '../shared/termmap.js';
 
 const data = {
   entities: [
@@ -84,4 +84,24 @@ test('real set: DNS shows only its own links', () => {
   assert.ok(dns.links.every(l => l.from === 'dns' || l.to === 'dns'));
   // Every fact a question row asks about has a map.
   questionsFrom(real).forEach(q => assert.ok(mapFor(q.fromFacts[0].subject, f, t), q.question));
+});
+
+test('miss map: unlocked links plus the missed fact, focus on its far end', () => {
+  const row = { fromFacts: [{ subject: 'http', predicate: 'runs_over', object: 'tcp' }] };
+  const r = missMap(row, facts, templates, new Set(['http|uses_port|80']));
+  assert.equal(r.map.centre.id, 'http');
+  assert.deepEqual(r.map.links.map(l => l.key).sort(), ['http|runs_over|tcp', 'http|uses_port|80']);
+  assert.equal(r.focus, 'tcp');
+});
+
+test('miss map: nothing unlocked still shows the missed link', () => {
+  const row = { fromFacts: [{ subject: 'https', predicate: 'uses_port', object: 443 }] };
+  const r = missMap(row, facts, templates, new Set());
+  assert.deepEqual(r.map.links.map(l => l.key), ['https|uses_port|443']);
+  assert.equal(r.focus, '#uses_port:443');
+});
+
+test('miss map: no fromFacts or an undrawn fact gives null', () => {
+  assert.equal(missMap({ question: 'x' }, facts, templates, new Set()), null);
+  assert.equal(missMap({ fromFacts: [{ subject: 'rj45', predicate: 'pin_count', object: 8 }] }, facts, templates, null), null);
 });
