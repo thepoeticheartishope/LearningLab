@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bubble answers</title>
+<link rel="stylesheet" href="../../shared/lab.css">
+<link rel="stylesheet" href="bubbles.css">
+</head>
+<body>
+<main>
+  <p><a href="../../">← Lab</a> · <a href="CARD.md">Card</a></p>
+  <h1>Bubble answers</h1>
+  <div class="row b-switches">
+    <div class="row" role="group" aria-label="Answer mode">
+      <button type="button" data-mode="bubbles" aria-pressed="false">BUBBLES</button>
+      <button type="button" data-mode="buttons" aria-pressed="false">BUTTONS</button>
+    </div>
+    <button type="button" id="calm" aria-pressed="false">Calm</button>
+  </div>
+  <div class="b-top small muted"><span id="progress"></span><span id="score"></span></div>
+  <div class="b-bar"><div id="bar" class="b-fill"></div></div>
+  <p id="question" class="b-question"></p>
+  <div id="answers"></div>
+  <p id="feedback" class="b-feedback" aria-live="polite"></p>
+  <ul id="review" class="b-review" hidden></ul>
+  <div class="row b-next"><button type="button" id="next" hidden></button><button type="button" id="retry" hidden></button></div>
+  <p id="summary" class="small muted b-summary"></p>
+</main>
+<script type="module" src="view.js"></script>
+</body>
+</html>

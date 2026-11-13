@@ -24,11 +24,14 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 | `shared/facts.js` | loads `data/facts/<id>.json` and generates its questions |
 | `shared/log.js` | answer log in localStorage + JSON export |
 | `shared/choices.js` | multiple-choice options for a question row |
+| `shared/bubbles.js` | floating answer bubbles: `mountBubbles(el, { answers, onPick })` → `{ mark, dim, setAnswers, setCalm, destroy }` |
+| `shared/bubblephysics.js` | the bubbles' movement maths (no DOM) |
 | `data/facts/` | fact sets (CompTIA A+ Core 1 from DungeonCrawler) |
 | `data/media/` | pictures/sounds by entity id; `COVERAGE.md` = which have one |
 | `tools/media-check.mjs` | `npm run media`: rebuilds `data/media/COVERAGE.md` |
 | `experiments/` | one folder per experiment |
 | `experiments/mastery/` | experiment 1: mastery tiers (pick → evidence → type → rest) |
+| `experiments/bubbles/` | experiment 2: bubble answers vs plain buttons (port facts, modes alternate per round) |
 
 ## Run
 ```
