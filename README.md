@@ -30,7 +30,7 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 | `data/media/` | pictures/sounds by entity id; `COVERAGE.md` = which have one |
 | `tools/media-check.mjs` | `npm run media`: rebuilds `data/media/COVERAGE.md` |
 | `experiments/` | one folder per experiment |
-| `experiments/mastery/` | experiment 1: mastery tiers (pick → evidence → type → rest) |
+| `experiments/mastery/` | experiment 1: mastery tiers (pick → evidence → type → rest); tier 1 answers as bubbles or buttons |
 | `experiments/bubbles/` | experiment 2: bubble answers vs plain buttons (port facts, modes alternate per round) |
 
 ## Run

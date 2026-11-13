@@ -13,12 +13,18 @@ import { buildChoices } from '../../shared/choices.js';
 import { logAnswer, readLog } from '../../shared/log.js';
 import { answerKey, rightAnswers, escapeHtml } from '../../shared/text.js';
 import { initStages, showStages } from './stagesview.js';
+import { mountBubbles } from '../../shared/bubbles.js';
 
 const isDev = new URLSearchParams(location.search).has('dev');
 const letters = ['A', 'B', 'C', 'D'];
 const TIER_NAMES = { 1: 'PRACTICING', 2: 'NEARLY MASTERED', 3: 'MASTERED CHECK', 4: 'MASTERED' };
 const BET_NAMES = { 1: 'Low (1)', 2: 'Medium (2)', 3: 'High (3)' };
 const EXP = 'mastery';
+// Tier 1's answers as floating bubbles (shared/bubbles.js) or plain
+// buttons; his pick is kept. Bubbles are calm when the device asks for
+// reduced motion.
+const ANSWER_MODES = { bubbles: 'Bubbles', buttons: 'Buttons' };
+const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
 
 const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
 
@@ -35,6 +41,7 @@ const stagesBox = document.getElementById('stages');
 const open = {
   all: [], record: newMasteryRecord(), picked: new Set(),
   q: null, tier: 1, task: 1, choices: [], bet: 0, answered: null, picked2: new Set(), checked: null, shownAt: 0,
+  answerMode: 'bubbles', bub: null, bubHost: null, bubMarked: false,
 };
 
 // ---------- storage ----------
@@ -52,6 +59,15 @@ function saveJson(name, value) {
 
 function save() { saveJson('record', open.record); }
 function savePicked() { saveJson('picked', [...open.picked]); }
+open.answerMode = ANSWER_MODES[loadJson('answers', 'bubbles')] ? loadJson('answers', 'bubbles') : 'bubbles';
+
+// Stops the question's bubbles (a new question, another tab, buttons picked).
+function dropBubbles() {
+  open.bub?.destroy();
+  open.bub = null;
+  open.bubHost = null;
+  open.bubMarked = false;
+}
 
 // Today's day number, moved on by DEV's skipped days.
 function today() {
@@ -71,6 +87,7 @@ function showTab(name) {
   pickBox.hidden = name !== 'pick';
   logBox.hidden = name !== 'log';
   stagesBox.hidden = name !== 'stages';
+  if (name !== 'practise') dropBubbles();
   if (name === 'practise') next();
   if (name === 'pick') drawPick();
   if (name === 'log') drawLog();
@@ -88,6 +105,7 @@ function next() {
 
 // Sets up the question in `open.q` at its tier, fresh, and draws it.
 function show() {
+  dropBubbles();
   open.tier = open.q ? masteryTier(open.record, open.q) : 1;
   open.task = open.q ? masteryTask(open.record, open.q) : 1;
   open.bet = 0;
@@ -115,6 +133,7 @@ function settle(given, right) {
   logAnswer({
     exp: EXP, set: MASTERY_SET, key: masteryKey(open.q), given, right, ms,
     tier: open.tier, task: open.task, bet: open.bet || null,
+    answers: open.task === 1 ? open.answerMode : null,
     day: today(), change: moved ? moved.type.replace('mastery', '').toLowerCase() : null,
   });
   draw();
@@ -174,6 +193,7 @@ function draw() {
   }
   box.append(statusLine());
   if (isDev) box.append(devRow());
+  open.bub?.resize();
 }
 
 // The fact's credits on the tier it was asked at: a full bar once the
@@ -203,8 +223,51 @@ function betRow() {
   return row;
 }
 
+// Tier 1's switch: answers as bubbles or plain buttons.
+function answerModeRow() {
+  const row = el('div', 'row m-answer-mode');
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', 'Answers as');
+  row.append(el('span', 'muted small', 'Answers as'));
+  Object.entries(ANSWER_MODES).forEach(([mode, name]) => {
+    const b = button(name, () => {
+      if (open.answerMode === mode) return;
+      open.answerMode = mode;
+      saveJson('answers', mode);
+      dropBubbles();
+      draw();
+    }, 'small');
+    b.setAttribute('aria-pressed', String(open.answerMode === mode));
+    row.append(b);
+  });
+  return row;
+}
+
+// Tier 1 as bubbles: mounted once per question and moved back in on every
+// redraw, so they keep floating. Once answered the right one turns green,
+// a wrong pick red, and the rest fade.
+function bubbleList() {
+  if (!open.bub) {
+    open.bubHost = el('div', 'm-bubbles');
+    open.bub = mountBubbles(open.bubHost, { answers: open.choices, onPick: answer, calm: reducedMotion });
+  }
+  if (open.answered && !open.bubMarked) {
+    open.bubMarked = true;
+    const right = rightAnswers(open.q);
+    open.choices.forEach((opt) => {
+      if (right.has(answerKey(opt))) open.bub.mark(opt, 'ok');
+      else if (opt === open.answered.given) open.bub.mark(opt, 'bad');
+    });
+    open.bub.dim();
+  }
+  const wrap = el('div');
+  wrap.append(answerModeRow(), open.bubHost);
+  return wrap;
+}
+
 // Tier 1: the options; once answered the right one is marked, a wrong pick struck.
 function optionList() {
+  if (open.answerMode === 'bubbles') return bubbleList();
   const list = el('div', 'm-options');
   open.choices.forEach((opt, i) => {
     const b = button('', () => answer(opt), 'm-option');
@@ -217,7 +280,9 @@ function optionList() {
     }
     list.append(b);
   });
-  return list;
+  const wrap = el('div');
+  wrap.append(answerModeRow(), list);
+  return wrap;
 }
 
 // Tiers 3 and 4: type the answer; Enter or CHECK settles it.
