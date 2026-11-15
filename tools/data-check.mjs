@@ -52,13 +52,18 @@ export function checkFactSet(data, scenarios = []) {
     if (!t.ask_object && !t.ask_subject) errors.push(`Template \`${t.predicate}\` has no ask_object or ask_subject.`);
   }
 
-  // Facts: template, source, no repeats. (Unknown ids are caught by npm test.)
+  // Facts: known ids, template, source, no repeats. The app skips a fact
+  // with an unknown id without a word, so these are errors.
   const keys = new Set(), predUsed = new Set();
   for (const f of facts) {
     const key = factKey(f);
     if (keys.has(key)) errors.push(`Fact \`${key}\` is listed twice.`);
     keys.add(key);
     predUsed.add(f.predicate);
+    if (!byId.has(f.subject)) errors.push(`Fact \`${key}\`: subject \`${f.subject}\` is not an entity id.`);
+    if (typeof f.object === 'number') {
+      if (!Number.isFinite(f.object)) errors.push(`Fact \`${key}\`: object is not a real number.`);
+    } else if (!byId.has(f.object)) errors.push(`Fact \`${key}\`: object \`${f.object}\` is not an entity id or a number.`);
     if (!tByPred.has(f.predicate)) errors.push(`Fact \`${key}\`: no template for predicate \`${f.predicate}\`.`);
     if (!f.source) errors.push(`Fact \`${key}\` has no source.`);
     else if (!SOURCE.test(f.source)) warnings.push(`Fact \`${key}\`: source "${f.source}" is not like "220-1201 3.2".`);
@@ -187,8 +192,45 @@ function report(id, { errors, warnings, gaps }) {
   return L;
 }
 
-// Run it: node tools/data-check.mjs
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// What uses `name` (an entity id or a predicate) in fact set `data`, so you
+// can see what a rename or delete would touch. Returns
+// { entity, template, facts, sameType }: the entity and template with that
+// name (or null), the facts that use it, and the other entities of the
+// entity's type (its wrong-answer pool).
+export function usesOf(data, name) {
+  const ents = data.entities || [], facts = data.facts || [], templates = data.templates || [];
+  const entity = ents.find(e => e.id === name) || null;
+  const template = templates.find(t => t.predicate === name) || null;
+  return {
+    entity, template,
+    facts: facts.filter(f => f.subject === name || f.object === name || f.predicate === name),
+    sameType: entity ? ents.filter(e => e.type === entity.type && e.id !== name) : [],
+  };
+}
+
+// The lookup as printed lines.
+function usesReport(setId, name, { entity, template, facts, sameType }) {
+  const L = [`${setId}: ${name}`];
+  if (!entity && !template && !facts.length) return [...L, '  Not used here (no entity, template or fact).'];
+  if (entity) L.push(`  Entity: "${entity.name}" (type ${entity.type}). ${sameType.length} other ${entity.type} entities share its wrong-answer pool.`);
+  if (template) L.push(`  Template for predicate ${name}.`);
+  if (!entity && !template) L.push('  WARNING: no entity or template with this name, but facts use it.');
+  L.push(`  ${facts.length} fact${facts.length === 1 ? '' : 's'}:`);
+  facts.forEach(f => L.push(`    ${f.subject} · ${f.predicate} · ${f.object}   (${f.source || 'no source'})`));
+  if (facts.length) L.push('  Renaming it changes these questions\' text, so their Mastery progress starts over.');
+  return L;
+}
+
+// Run it: node tools/data-check.mjs            (check + GAPS.md)
+//         node tools/data-check.mjs uses <id>  (what uses an entity id or predicate)
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv[2] === 'uses') {
+  const names = process.argv.slice(3);
+  if (!names.length) { console.log('Usage: npm run data -- uses <entity id or predicate> [more…]'); process.exitCode = 1; }
+  for (const name of names) for (const set of FACT_SETS) {
+    const data = JSON.parse(fs.readFileSync(`data/facts/${set.id}.json`, 'utf8'));
+    console.log(usesReport(set.id, name, usesOf(data, name)).join('\n'));
+  }
+} else if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const scenFile = 'experiments/mastery/scenarios.json';
   const scenarios = fs.existsSync(scenFile) ? JSON.parse(fs.readFileSync(scenFile, 'utf8')) : [];
   const out = ['# Data gaps', '', 'Made by `npm run data`. Do not edit by hand.', '',
