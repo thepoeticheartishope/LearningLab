@@ -15,6 +15,8 @@
   <ul class="list" id="experiments"></ul>
 
   <h2>Fact sets</h2>
+  <p class="muted small">The experiments run on the set picked here (or on their own page).</p>
+  <div id="set-pick"></div>
   <ul class="list" id="sets"></ul>
 
   <h2>Answer log</h2>
@@ -30,6 +32,9 @@ import { FACT_SETS } from './shared/config.js';
 import { loadFactSet } from './shared/facts.js';
 import { readLog, logSummary, downloadLog, clearLog } from './shared/log.js';
 import { escapeHtml } from './shared/text.js';
+import { chosenSetId, setPicker } from './shared/sets.js';
+
+document.getElementById('set-pick').append(setPicker(chosenSetId(), () => {}));
 
 const exps = document.getElementById('experiments');
 exps.innerHTML = EXPERIMENTS.length

@@ -16,6 +16,7 @@ export function otherMode(mode) {
 
 // The question rows made from facts with `predicate`.
 export function rowsFor(questions, predicate) {
+  if (!predicate) return questions;   // no predicate: every row
   return questions.filter(q => (q.fromFacts || []).some(f => f.predicate === predicate));
 }
 

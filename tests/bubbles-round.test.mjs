@@ -13,7 +13,7 @@ import { readTriples } from '../shared/factgen.js';
 import { buildChoices } from '../shared/choices.js';
 
 const data = JSON.parse(readFileSync(new URL('../data/facts/comptia-aplus.json', import.meta.url)));
-const rows = rowsFor(questionsFrom(data), BUBBLES.predicate);
+const rows = rowsFor(questionsFrom(data), BUBBLES.sets['comptia-aplus'].predicate);
 const facts = readTriples(data).facts;
 
 test('the port rows: 24, both directions, four real choices each', () => {
@@ -59,7 +59,7 @@ test('the wrong-tap note finds the tapped answer\'s own fact, both ways', () => 
   assert.deepEqual(factFor(facts, 'uses_port', '23'), { name: 'Telnet', value: 23 });
   assert.deepEqual(factFor(facts, 'uses_port', 'telnet'), { name: 'Telnet', value: 23 });
   assert.equal(factFor(facts, 'uses_port', '9999'), null);
-  assert.equal(BUBBLES.note('Telnet', 23), 'Telnet uses port 23.');
+  assert.equal(BUBBLES.sets['comptia-aplus'].note('Telnet', 23), 'Telnet uses port 23.');
 });
 
 test('per-mode summary: first taps only, % right and average ms', () => {

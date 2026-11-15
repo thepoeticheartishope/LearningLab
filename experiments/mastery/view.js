@@ -10,7 +10,10 @@
 // and its FILL THE GAP mode is extra practice (logged, no tier moves).
 // With ?dev, buttons move the day on (to
 // test rests) and move the question showing a tier up or down.
-import { MASTERY, MASTERY_SET } from './config.js';
+import { MASTERY, MASTERY_SCENARIOS } from './config.js';
+import { chosenSetId, setPicker } from '../../shared/sets.js';
+
+const MASTERY_SET = chosenSetId();
 import { newMasteryRecord, masteryKey, masteryDay, masteryNext, masteryTier, masteryTask, masteryCredits, masteryCounts, settleMastery, evidenceCheck, shiftMasteryTier } from './mastery.js';
 import { loadFactSet } from '../../shared/facts.js';
 import { buildChoices } from '../../shared/choices.js';
@@ -514,7 +517,7 @@ function drawPick() {
 function drawLog() {
   logBox.innerHTML = '';
   const day = today();
-  const entries = readLog().filter(e => e.exp === EXP);
+  const entries = readLog().filter(e => e.exp === EXP && e.set === MASTERY_SET);
   const tally = new Map();
   entries.forEach(e => {
     const t = tally.get(e.key) || { right: 0, wrong: 0 };
@@ -577,8 +580,9 @@ function drawLog() {
 async function start() {
   try {
     const set = await loadFactSet(MASTERY_SET, '../../');
-    const res = await fetch('scenarios.json');
-    const scenarios = res.ok ? await res.json() : [];
+    const file = MASTERY_SCENARIOS[MASTERY_SET];
+    const res = file ? await fetch(file) : null;
+    const scenarios = res?.ok ? await res.json() : [];
     const scenarioKeys = new Set(scenarios.map(masteryKey));
     open.all = [
       ...scenarios.map(q => ({ ...q, group: 'With evidence scenarios' })),
@@ -613,7 +617,9 @@ const GROUPS = {
 function groupOf(q) {
   const f = q.fromFacts && q.fromFacts[0];
   if (!f) return 'Other numbers';
+  if (MASTERY_SET !== 'comptia-aplus') return f.predicate.replaceAll('_', ' ') + (f.asks === 'subject' ? ' (reverse)' : '');
   return GROUPS[f.predicate + ':' + f.asks] || 'Other numbers';
 }
 
+document.querySelector('h1').after(setPicker(MASTERY_SET));
 start();
