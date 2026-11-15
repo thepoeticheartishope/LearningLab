@@ -18,6 +18,8 @@ export const FACT_QUESTIONS = {
 export const FACT_SETS = [
   { id: 'comptia-aplus', name: 'CompTIA A+ Core 1',
     source: { pattern: /^\d{3}-\d{4} (\d+)\.\d+$/, example: '220-1201 3.2' } },
+  { id: 'bible', name: 'Bible',
+    source: { pattern: /^((?:[1-3] )?[A-Z][a-z]+(?: of [A-Z][a-z]+)?) \d+(?::\d+(?:[-–]\d+)?)?$/, example: 'Gen 5:27' } },
 ];
 
 // The picked fact set in localStorage (shared/sets.js).
