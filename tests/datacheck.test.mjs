@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { FACT_SETS } from '../shared/config.js';
-import { checkFactSet } from '../tools/data-check.mjs';
+import { checkFactSet, usesOf } from '../tools/data-check.mjs';
 
 const scenarios = JSON.parse(readFileSync(new URL('../experiments/mastery/scenarios.json', import.meta.url), 'utf8'));
 
@@ -37,4 +37,43 @@ test('data check catches broken data and counts gaps', () => {
   assert.ok(errors.some(e => e.includes('no source')));
   assert.ok(warnings.some(w => w.includes('named "b"')));
   assert.equal(gaps.counts.termsUsed, 2);
+});
+
+test('data check catches unknown subject and object ids', () => {
+  const data = {
+    entities: [{ id: 'a', name: 'A', type: 'protocol' }],
+    templates: [{ predicate: 'secure_version', ask_object: 'Secure {subject}?' }],
+    facts: [
+      { subject: 'a', predicate: 'secure_version', object: 'nope', source: '220-1201 2.1' },
+      { subject: 'typo', predicate: 'secure_version', object: 'a', source: '220-1201 2.1' },
+      { subject: 'a', predicate: 'secure_version', object: 3, source: '220-1201 2.1' },
+    ],
+  };
+  const { errors } = checkFactSet(data);
+  assert.ok(errors.some(e => e.includes('object `nope` is not an entity id')));
+  assert.ok(errors.some(e => e.includes('subject `typo` is not an entity id')));
+  assert.equal(errors.length, 2);   // a number object is fine
+});
+
+test('uses lookup finds facts by entity id and by predicate', () => {
+  const data = {
+    entities: [
+      { id: 'telnet', name: 'Telnet', type: 'protocol' }, { id: 'ssh', name: 'SSH', type: 'protocol' },
+      { id: 'http', name: 'HTTP', type: 'protocol' }, { id: 'rj45', name: 'RJ45', type: 'connector' },
+    ],
+    templates: [{ predicate: 'secure_version', ask_object: 'Secure {subject}?' }],
+    facts: [
+      { subject: 'telnet', predicate: 'secure_version', object: 'ssh', source: '220-1201 2.1' },
+      { subject: 'http', predicate: 'secure_version', object: 'https', source: '220-1201 2.1' },
+    ],
+  };
+  const ssh = usesOf(data, 'ssh');
+  assert.equal(ssh.entity.name, 'SSH');
+  assert.equal(ssh.facts.length, 1);
+  assert.deepEqual(ssh.sameType.map(e => e.id), ['telnet', 'http']);
+  assert.equal(usesOf(data, 'secure_version').facts.length, 2);
+  assert.ok(usesOf(data, 'secure_version').template);
+  const none = usesOf(data, 'rj45');
+  assert.equal(none.facts.length, 0);
+  assert.equal(none.sameType.length, 0);   // only connector
 });

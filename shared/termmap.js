@@ -7,6 +7,8 @@
 // tripleTemplates' map. Only facts whose template has a `map` entry are
 // drawn: { line: 'listens on', kind?: 'info' | 'risk' | 'defence',
 // object?: 'port {object}' } (`object` = how a number reads in its bubble).
+// A fact's optional `role` shows on its line and in its sentence:
+// "listens on (data)", "FTP listens on port 20 (data)."
 // `unlocked` = a Set of fact keys (factKey) the learner may see, or null
 // for every fact. A locked fact is not drawn at all.
 //
@@ -59,7 +61,8 @@ function drawable(facts, templates, unlocked) {
     const key = factKey(f);
     if (unlocked && !unlocked.has(key)) return;
     const a = nodeOf(f.subject, f, m), b = nodeOf(f.object, f, m);
-    out.push({ f, m, key, a, b, sentence: a.label + ' ' + m.line + ' ' + b.label + '.' });
+    const role = f.role ? ' (' + f.role + ')' : '';
+    out.push({ f, m, key, a, b, role, sentence: a.label + ' ' + m.line + ' ' + b.label + role + '.' });
   });
   return out;
 }
@@ -80,7 +83,7 @@ export function mapFor(entityId, facts, templates, unlocked = null) {
   own.forEach(d => addNode(d.a.id === entityId ? d.b : d.a, d.m.kind));
 
   const links = own
-    .map(d => ({ key: d.key, from: d.a.id, to: d.b.id, line: d.m.line, kind: d.m.kind, sentence: d.sentence }));
+    .map(d => ({ key: d.key, from: d.a.id, to: d.b.id, line: d.m.line + d.role, kind: d.m.kind, sentence: d.sentence }));
   return { centre: nodes.get(entityId), nodes: [...nodes.values()], links };
 }
 
