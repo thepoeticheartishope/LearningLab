@@ -1,6 +1,6 @@
 // Data check: is the facts data sound, and where does it need more facts?
-// Reads every set in FACT_SETS (data/facts/<id>.json) and the Mastery
-// evidence scenarios (experiments/mastery/scenarios.json).
+// Reads every set in FACT_SETS (data/facts/<id>.json) and its Mastery
+// evidence scenarios (MASTERY_SCENARIOS, if the set has any).
 //
 //   Errors   — data the app will mishandle. Exit code 1.
 //   Warnings — worth a look, nothing breaks.
@@ -20,16 +20,18 @@ import { FACT_SETS } from '../shared/config.js';
 import { questionsFrom } from '../shared/facts.js';
 import { factKey } from '../shared/termmap.js';
 import { masteryKey } from '../experiments/mastery/mastery.js';
+import { MASTERY_SCENARIOS } from '../experiments/mastery/config.js';
 
-const SOURCE = /^\d{3}-\d{4} \d+\.\d+$/;   // "220-1201 3.2"
+// A set's source format (FACT_SETS `source`); A+ when none is given.
+const A_PLUS_SOURCE = { pattern: /^\d{3}-\d{4} (\d+)\.\d+$/, example: '220-1201 3.2' };
 const MIN_TYPE = 4;                         // 1 right + 3 wrong in Recognition
 const DEEP = 2;                             // facts a term needs for stage 3
 
 const idOf = v => (typeof v === 'string' ? v : null);
-const domainOf = src => (SOURCE.test(src || '') ? src.split(' ')[1].split('.')[0] : '?');
+const domainOf = (src, fmt) => (fmt.pattern.exec(src || '') || [])[1] || '?';
 
 // Check one fact set. Returns { errors, warnings, gaps } with no output.
-export function checkFactSet(data, scenarios = []) {
+export function checkFactSet(data, scenarios = [], source = A_PLUS_SOURCE) {
   const errors = [], warnings = [];
   const ents = data.entities || [], facts = data.facts || [], templates = data.templates || [];
   const byId = new Map();
@@ -66,7 +68,7 @@ export function checkFactSet(data, scenarios = []) {
     } else if (!byId.has(f.object)) errors.push(`Fact \`${key}\`: object \`${f.object}\` is not an entity id or a number.`);
     if (!tByPred.has(f.predicate)) errors.push(`Fact \`${key}\`: no template for predicate \`${f.predicate}\`.`);
     if (!f.source) errors.push(`Fact \`${key}\` has no source.`);
-    else if (!SOURCE.test(f.source)) warnings.push(`Fact \`${key}\`: source "${f.source}" is not like "220-1201 3.2".`);
+    else if (!source.pattern.test(f.source)) warnings.push(`Fact \`${key}\`: source "${f.source}" is not like "${source.example}".`);
     if (f.role !== undefined && (typeof f.role !== 'string' || !f.role.trim())) errors.push(`Fact \`${key}\`: role must be words, like "data".`);
     else if (f.role && tByPred.has(f.predicate) && !tByPred.get(f.predicate).ask_object_role) {
       warnings.push(`Fact \`${key}\` has role "${f.role}", but template \`${f.predicate}\` has no ask_object_role, so no role question is made.`);
@@ -151,7 +153,7 @@ export function checkFactSet(data, scenarios = []) {
 }
 
 // The report for one set, as Markdown lines.
-function report(id, { errors, warnings, gaps }) {
+function report(id, { errors, warnings, gaps }, fmt = A_PLUS_SOURCE) {
   const c = gaps.counts;
   const L = [`## ${id}`, '',
     `${c.facts} facts · ${c.entities} entities (${c.termsUsed} in a fact) · ${c.templates} templates · ${c.scenarios} scenarios`, ''];
@@ -170,7 +172,7 @@ function report(id, { errors, warnings, gaps }) {
     '| Objective | Facts | Scenarios |', '|---|---|---|');
   [...gaps.objectives].sort((a, b) => String(a.source).localeCompare(String(b.source), undefined, { numeric: true }))
     .forEach(o => L.push(`| ${o.source} | ${o.facts} | ${o.scenarios} |`));
-  const domains = new Set(gaps.objectives.filter(o => o.facts).map(o => domainOf(o.source)));
+  const domains = new Set(gaps.objectives.filter(o => o.facts).map(o => domainOf(o.source, fmt)));
   L.push('', `Domains with facts: ${[...domains].sort().join(', ') || 'none'}.`, '');
 
   L.push('### By predicate', '', '| Predicate | Facts |', '|---|---|');
@@ -221,6 +223,12 @@ function usesReport(setId, name, { entity, template, facts, sameType }) {
   return L;
 }
 
+// The Mastery evidence scenarios of set `id` ([] when it has none).
+export function scenariosOf(id) {
+  const file = MASTERY_SCENARIOS[id] && new URL(`../experiments/mastery/${MASTERY_SCENARIOS[id]}`, import.meta.url);
+  return file && fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
+}
+
 // Run it: node tools/data-check.mjs            (check + GAPS.md)
 //         node tools/data-check.mjs uses <id>  (what uses an entity id or predicate)
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv[2] === 'uses') {
@@ -231,15 +239,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log(usesReport(set.id, name, usesOf(data, name)).join('\n'));
   }
 } else if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const scenFile = 'experiments/mastery/scenarios.json';
-  const scenarios = fs.existsSync(scenFile) ? JSON.parse(fs.readFileSync(scenFile, 'utf8')) : [];
   const out = ['# Data gaps', '', 'Made by `npm run data`. Do not edit by hand.', '',
     'Where to add facts, by LEARNING-STYLE.md stage. Errors fail the check.', ''];
   let errorCount = 0;
   for (const set of FACT_SETS) {
     const data = JSON.parse(fs.readFileSync(`data/facts/${set.id}.json`, 'utf8'));
-    const r = checkFactSet(data, scenarios);
-    out.push(...report(set.id, r));
+    const r = checkFactSet(data, scenariosOf(set.id), set.source);
+    out.push(...report(set.id, r, set.source));
     const c = r.gaps.counts;
     errorCount += r.errors.length;
     console.log(`${set.id}: ${c.facts} facts, ${c.termsUsed} of ${c.entities} entities taught.`);

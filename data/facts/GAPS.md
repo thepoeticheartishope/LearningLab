@@ -160,3 +160,254 @@ Domains with facts: 2, 3.
 - Satellite — Which internet connection has high latency because the signal goes to orbit and back? (220-1201 2.7)
 - STP — Which twisted pair cable adds foil or braid to cope with motors and fluorescent lights nearby? (220-1201 3.2)
 - Plenum cable — Which fire-safe cable must be used in the air-handling space above a false ceiling? (220-1201 3.2)
+
+## bible
+
+85 facts · 94 entities (91 in a fact) · 9 templates · 0 scenarios
+
+### By area (entity type)
+
+Untaught = entities with no fact. Shallow = taught terms with only 1 fact (thin stage 3).
+
+| Type | Entities | Taught | Untaught | Shallow | Facts |
+|---|---|---|---|---|---|
+| book | 6 | 3 | 3 | 3 | 3 |
+| name | 4 | 4 | 0 | 3 | 5 |
+| woman | 17 | 17 | 0 | 10 | 25 |
+| man | 67 | 67 | 0 | 37 | 129 |
+
+### By objective
+
+| Objective | Facts | Scenarios |
+|---|---|---|
+| 1 Kings 11:43 | 1 | 0 |
+| 1 Kings 16:10 | 1 | 0 |
+| 1 Sam 1:20 | 1 | 0 |
+| 1 Sam 9:2 | 1 | 0 |
+| 1 Sam 17:13 | 1 | 0 |
+| 1 Sam 25:3 | 1 | 0 |
+| 1 Sam 25:42 | 1 | 0 |
+| 2 Chron 22:11 | 1 | 0 |
+| 2 Kings 8:16 | 1 | 0 |
+| 2 Kings 11:2 | 1 | 0 |
+| 2 Kings 22:1 | 1 | 0 |
+| 2 Sam 2:10 | 1 | 0 |
+| 2 Sam 3:2 | 2 | 0 |
+| 2 Sam 3:3 | 1 | 0 |
+| 2 Sam 5:4 | 1 | 0 |
+| Acts 24:24 | 1 | 0 |
+| Dan 1:7 | 1 | 0 |
+| Eccl 1:1 | 1 | 0 |
+| Est 1:9 | 1 | 0 |
+| Est 2:17 | 1 | 0 |
+| Ex 2:21 | 1 | 0 |
+| Ex 2:22 | 3 | 0 |
+| Ex 6:20 | 5 | 0 |
+| Gen 3:20 | 1 | 0 |
+| Gen 4:1 | 1 | 0 |
+| Gen 4:2 | 1 | 0 |
+| Gen 4:8 | 1 | 0 |
+| Gen 4:17 | 2 | 0 |
+| Gen 4:25 | 2 | 0 |
+| Gen 5:8 | 1 | 0 |
+| Gen 5:20 | 1 | 0 |
+| Gen 9:29 | 1 | 0 |
+| Gen 10:1 | 3 | 0 |
+| Gen 10:2 | 2 | 0 |
+| Gen 11:29 | 1 | 0 |
+| Gen 16:15 | 2 | 0 |
+| Gen 19:37 | 1 | 0 |
+| Gen 21:3 | 2 | 0 |
+| Gen 24:67 | 1 | 0 |
+| Gen 25:1 | 1 | 0 |
+| Gen 25:7 | 1 | 0 |
+| Gen 25:26 | 1 | 0 |
+| Gen 29:16 | 1 | 0 |
+| Gen 29:32 | 1 | 0 |
+| Gen 30:24 | 1 | 0 |
+| Gen 32:28 | 1 | 0 |
+| Gen 35:23 | 2 | 0 |
+| Gen 35:28 | 1 | 0 |
+| Hosea 1:3 | 2 | 0 |
+| Hosea 1:4 | 2 | 0 |
+| Joel 1:1 | 1 | 0 |
+| John 1:42 | 1 | 0 |
+| Josh 24:29 | 1 | 0 |
+| Judges 3:21 | 1 | 0 |
+| Judges 4:4 | 1 | 0 |
+| Luke 1:5 | 1 | 0 |
+| Luke 1:13 | 1 | 0 |
+| Luke 1:57 | 1 | 0 |
+| Mark 3:17 | 2 | 0 |
+| Matt 4:21 | 2 | 0 |
+| Prov 1:1 | 1 | 0 |
+| Rev 1:1 | 1 | 0 |
+| Ruth 4:13 | 1 | 0 |
+| Ruth 4:17 | 2 | 0 |
+| Zech 1:1 | 1 | 0 |
+
+Domains with facts: 1 Kings, 1 Sam, 2 Chron, 2 Kings, 2 Sam, Acts, Dan, Eccl, Est, Ex, Gen, Hosea, Joel, John, Josh, Judges, Luke, Mark, Matt, Prov, Rev, Ruth, Zech.
+
+### By predicate
+
+| Predicate | Facts |
+|---|---|
+| `age_crowned` | 2 |
+| `killed` | 3 |
+| `written_by` | 3 |
+| `first_son` | 5 |
+| `also_called` | 5 |
+| `age_at_death` | 6 |
+| `mother` | 9 |
+| `wife` | 15 |
+| `father` | 37 |
+
+### Stage 3 — taught terms with under 2 facts (add related facts) (53)
+
+- Ecclesiastes (`ecclesiastes`, book)
+- Proverbs (`proverbs`, book)
+- Revelation (`revelation`, book)
+- Absalom (`absalom`, man)
+- Ahaziah (`ahaziah`, man)
+- Berechiah (`berechiah`, man)
+- Boaz (`boaz`, man)
+- Daniel (`daniel`, man)
+- Eglon (`eglon`, man)
+- Ehud (`ehud`, man)
+- Elah (`elah`, man)
+- Eliab (`eliab`, man)
+- Felix (`felix`, man)
+- Gomer (`gomer`, man)
+- Ham (`ham`, man)
+- Ishbosheth (`ishbosheth`, man)
+- Jared (`jared`, man)
+- Jehoiada (`jehoiada`, man)
+- Jehoshaphat (`jehoshaphat`, man)
+- Joash (`joash`, man)
+- Joel (`joel`, man)
+- Joram (`joram`, man)
+- Joseph (`joseph`, man)
+- Joshua (`joshua`, man)
+- Josiah (`josiah`, man)
+- Kish (`kish`, man)
+- Laban (`laban`, man)
+- Lapidoth (`lapidoth`, man)
+- Lot (`lot`, man)
+- Magog (`magog`, man)
+- Moab (`moab`, man)
+- Nabal (`nabal`, man)
+- Pethuel (`pethuel`, man)
+- Rehoboam (`rehoboam`, man)
+- Samuel (`samuel`, man)
+- Shem (`shem`, man)
+- Simeon (`simeon`, man)
+- Simon Peter (`peter`, man)
+- Zechariah (`zechariah`, man)
+- Zimri (`zimri`, man)
+- Belteshazzar (`belteshazzar`, name)
+- Cephas (`cephas`, name)
+- Israel (`israel`, name)
+- Deborah (`deborah`, woman)
+- Drusilla (`drusilla`, woman)
+- Esther (`esther`, woman)
+- Hagar (`hagar`, woman)
+- Hannah (`hannah`, woman)
+- Jehoshabeath (`jehoshabeath`, woman)
+- Keturah (`keturah`, woman)
+- Leah (`leah`, woman)
+- Rebekah (`rebekah`, woman)
+- Vashti (`vashti`, woman)
+
+### Stage 4 — taught terms with no evidence scenario (91)
+
+- Ecclesiastes (`ecclesiastes`, book)
+- Proverbs (`proverbs`, book)
+- Revelation (`revelation`, book)
+- Aaron (`aaron`, man)
+- Abel (`abel`, man)
+- Abraham (`abraham`, man)
+- Absalom (`absalom`, man)
+- Adam (`adam`, man)
+- Ahasuerus (`ahasuerus`, man)
+- Ahaziah (`ahaziah`, man)
+- Amnon (`amnon`, man)
+- Amram (`amram`, man)
+- Berechiah (`berechiah`, man)
+- Boaz (`boaz`, man)
+- Cain (`cain`, man)
+- Daniel (`daniel`, man)
+- David (`david`, man)
+- Eglon (`eglon`, man)
+- Ehud (`ehud`, man)
+- Elah (`elah`, man)
+- Eliab (`eliab`, man)
+- Enoch (`enoch_cain`, man)
+- Felix (`felix`, man)
+- Gershom (`gershom`, man)
+- Gomer (`gomer`, man)
+- Ham (`ham`, man)
+- Hosea (`hosea`, man)
+- Isaac (`isaac`, man)
+- Ishbosheth (`ishbosheth`, man)
+- Ishmael (`ishmael`, man)
+- Jacob (`jacob`, man)
+- James (`james`, man)
+- Japheth (`japheth`, man)
+- Jared (`jared`, man)
+- Jehoiada (`jehoiada`, man)
+- Jehoshaphat (`jehoshaphat`, man)
+- Jesse (`jesse`, man)
+- Jezreel (`jezreel`, man)
+- Joash (`joash`, man)
+- Joel (`joel`, man)
+- John (`john`, man)
+- John the Baptist (`john_baptist`, man)
+- Joram (`joram`, man)
+- Joseph (`joseph`, man)
+- Joshua (`joshua`, man)
+- Josiah (`josiah`, man)
+- Kish (`kish`, man)
+- Laban (`laban`, man)
+- Lapidoth (`lapidoth`, man)
+- Lot (`lot`, man)
+- Magog (`magog`, man)
+- Moab (`moab`, man)
+- Moses (`moses`, man)
+- Nabal (`nabal`, man)
+- Noah (`noah`, man)
+- Obed (`obed`, man)
+- Pethuel (`pethuel`, man)
+- Rehoboam (`rehoboam`, man)
+- Reuben (`reuben`, man)
+- Samuel (`samuel`, man)
+- Saul (`saul`, man)
+- Seth (`seth`, man)
+- Shem (`shem`, man)
+- Simeon (`simeon`, man)
+- Simon Peter (`peter`, man)
+- Solomon (`solomon`, man)
+- Zacharias (`zacharias`, man)
+- Zebedee (`zebedee`, man)
+- Zechariah (`zechariah`, man)
+- Zimri (`zimri`, man)
+- Belteshazzar (`belteshazzar`, name)
+- Boanerges (`boanerges`, name)
+- Cephas (`cephas`, name)
+- Israel (`israel`, name)
+- Abigail (`abigail`, woman)
+- Deborah (`deborah`, woman)
+- Drusilla (`drusilla`, woman)
+- Elizabeth (`elizabeth`, woman)
+- Esther (`esther`, woman)
+- Eve (`eve`, woman)
+- Gomer (`gomer_wife`, woman)
+- Hagar (`hagar`, woman)
+- Hannah (`hannah`, woman)
+- Jehoshabeath (`jehoshabeath`, woman)
+- Jochebed (`jochebed`, woman)
+- Keturah (`keturah`, woman)
+- Leah (`leah`, woman)
+- Rebekah (`rebekah`, woman)
+- Sarah (`sarah`, woman)
+- Vashti (`vashti`, woman)
+- Zipporah (`zipporah`, woman)

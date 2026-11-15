@@ -13,7 +13,9 @@ import { mountBubbleMap } from '../../shared/bubblemap.js';
 import { mapFor, mapTerms, sentencesFor, missMap, gapTask } from '../../shared/termmap.js';
 import { readTriples, tripleTemplates } from '../../shared/factgen.js';
 import { logAnswer } from '../../shared/log.js';
-import { MASTERY_SET } from './config.js';
+import { chosenSetId } from '../../shared/sets.js';
+
+const MASTERY_SET = chosenSetId();
 
 const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
 

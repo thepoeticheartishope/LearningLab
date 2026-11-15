@@ -11,8 +11,11 @@ import { readTriples } from '../../shared/factgen.js';
 import { buildChoices } from '../../shared/choices.js';
 import { logAnswer, readLog } from '../../shared/log.js';
 import { mountBubbles } from '../../shared/bubbles.js';
+import { chosenSetId, setPicker } from '../../shared/sets.js';
 
 const EXP = 'bubbles';
+const SET = chosenSetId();
+const PER_SET = BUBBLES.sets[SET] || {};   // predicate + note, when the set has them
 const $ = id => document.getElementById(id);
 const modeButtons = [...document.querySelectorAll('[data-mode]')];
 
@@ -75,7 +78,7 @@ function pick(given) {
   const res = answer(st.round, given);
   if (!res) return;
   logAnswer({
-    exp: EXP, set: BUBBLES.set, key: q.key, given, right: res.right,
+    exp: EXP, set: SET, key: q.key, given, right: res.right,
     ms: Math.round(performance.now() - st.shownAt), mode: st.mode, firstTry: res.firstTry, calm: st.calm,
   });
   st.marks.set(given, res.right ? 'ok' : 'bad');
@@ -85,8 +88,8 @@ function pick(given) {
     st.bubbles?.dim();
     showNext(st.round.i + 1 >= st.round.items.length ? 'See results' : 'Next question');
   } else {
-    const f = factFor(st.facts, BUBBLES.predicate, given);
-    feedback('Not quite. ' + (f ? BUBBLES.note(f.name, f.value) + ' ' : '') + 'Try another.', 'wrong');
+    const f = PER_SET.predicate && PER_SET.note ? factFor(st.facts, PER_SET.predicate, given) : null;
+    feedback('Not quite. ' + (f ? PER_SET.note(f.name, f.value) + ' ' : '') + 'Try another.', 'wrong');
     st.bubbles?.mark(given, 'bad');
   }
   markButtons();
@@ -161,7 +164,7 @@ function startRound(round) {
 }
 
 function drawSummary() {
-  const s = modeSummary(readLog());
+  const s = modeSummary(readLog().filter(e => e.set === SET));
   const line = (name, m) => name + ': ' + (m.questions
     ? m.firstTryPct + '% first try, ' + (m.avgMs == null ? '?' : (m.avgMs / 1000).toFixed(1) + ' s') + ' average (' + m.questions + (m.questions === 1 ? ' question)' : ' questions)')
     : 'no answers yet');
@@ -200,8 +203,9 @@ $('calm').addEventListener('click', () => {
 
 // ---------- start ----------
 
-loadFactSet(BUBBLES.set, '../../').then((set) => {
-  st.rows = rowsFor(set.questions, BUBBLES.predicate);
+document.querySelector('h1').after(setPicker(SET));
+loadFactSet(SET, '../../').then((set) => {
+  st.rows = rowsFor(set.questions, PER_SET.predicate);
   st.facts = readTriples(set.data).facts;
   drawSummary();
   startRound(newRound(st.rows, BUBBLES.roundSize));

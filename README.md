@@ -22,6 +22,7 @@ idea → mockup → card → Lab build → play-test → verdict (keep / tweak /
 | `index.html` | menu: experiments, fact sets, answer log export |
 | `shared/factgen.js` | facts (entities + S·P·O facts + templates) → question rows |
 | `shared/facts.js` | loads `data/facts/<id>.json` and generates its questions |
+| `shared/sets.js` | which fact set the experiments run on: `?set=<id>`, else the last pick, else the first of `FACT_SETS`; `setPicker(current)` drop-down on each page |
 | `shared/log.js` | answer log in localStorage + JSON export |
 | `shared/choices.js` | multiple-choice options for a question row |
 | `shared/bubbles.js` | floating answer bubbles: `mountBubbles(el, { answers, onPick })` → `{ mark, dim, setAnswers, setCalm, destroy }` |

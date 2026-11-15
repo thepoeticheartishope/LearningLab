@@ -14,5 +14,7 @@ ul.list li { background: var(--card); border: 1px solid var(--line); border-radi
 a { color: var(--accent); }
 button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
 button:hover { border-color: var(--accent); }
+select { font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
+.set-picker { display: inline-flex; gap: 8px; align-items: center; margin: 8px 0; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .tag { font-size: 0.8rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
