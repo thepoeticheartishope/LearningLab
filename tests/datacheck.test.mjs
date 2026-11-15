@@ -5,14 +5,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { FACT_SETS } from '../shared/config.js';
-import { checkFactSet, usesOf } from '../tools/data-check.mjs';
-
-const scenarios = JSON.parse(readFileSync(new URL('../experiments/mastery/scenarios.json', import.meta.url), 'utf8'));
+import { checkFactSet, usesOf, scenariosOf } from '../tools/data-check.mjs';
 
 for (const set of FACT_SETS) {
   test(`${set.id}: data check finds no errors`, () => {
     const data = JSON.parse(readFileSync(new URL(`../data/facts/${set.id}.json`, import.meta.url), 'utf8'));
-    const { errors } = checkFactSet(data, scenarios);
+    const { errors } = checkFactSet(data, scenariosOf(set.id), set.source);
     assert.deepEqual(errors, []);
   });
 }

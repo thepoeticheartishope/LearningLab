@@ -15,6 +15,9 @@ export const MASTERY = {
   storageKey: 'learninglab.mastery.', // + 'record.' / 'picked.' + the set id
 };
 
-// The fact set this experiment runs on, and its hand-written rows with
-// evidence scenarios (scenarios.json, from DungeonCrawler's A+ list).
-export const MASTERY_SET = 'comptia-aplus';
+// The hand-written rows with evidence scenarios, per fact set (file in
+// this folder). The set itself is the picked one (shared/sets.js); a set
+// not listed here has no scenarios yet.
+export const MASTERY_SCENARIOS = {
+  'comptia-aplus': 'scenarios.json',   // from DungeonCrawler's A+ list
+};
