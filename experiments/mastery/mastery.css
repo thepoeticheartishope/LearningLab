@@ -40,6 +40,8 @@ input[type="text"] { font: inherit; flex: 1; min-width: 0; padding: 8px 10px; bo
 .m-status { margin-top: 20px; }
 .m-dev { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); align-items: center; }
 h3 { font-size: 1rem; margin: 20px 0 6px; }
+.pick-head { align-items: center; margin-top: 18px; }
+.pick-head h3 { margin: 0 4px 0 0; }
 .pick-list { list-style: none; padding: 0; margin: 0; }
 .pick-list li { padding: 4px 0; }
 .pick-list label { cursor: pointer; }
