@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { generateQuestions } from '../shared/factgen.js';
+import { generateQuestions, questionGroup } from '../shared/factgen.js';
 import { FACT_QUESTIONS } from '../shared/config.js';
 
 // Runs fn with Math.random fixed at `value`, then puts it back.
@@ -230,4 +230,15 @@ test('roles: one question per subject and role, the other role\'s answer offered
 test('roles: no ask_object_role in the template, no role questions', () => {
   const plain = { ...roles, templates: [{ ...roles.templates[0], ask_object_role: undefined }] };
   assert.ok(!generateQuestions(plain).some(r => r.question.includes(' for ')));
+});
+
+test('questionGroup: template group name by way asked, else the predicate in words', () => {
+  const data = { templates: [{ predicate: 'uses_port', group_object: 'Port of a protocol' }, { predicate: 'first_son' }] };
+  const row = (predicate, asks) => ({ fromFacts: [{ predicate, asks }] });
+  assert.equal(questionGroup(data, row('uses_port', 'object')), 'Port of a protocol');
+  assert.equal(questionGroup(data, row('uses_port', 'subject')), 'uses port (reverse)');
+  assert.equal(questionGroup(data, row('first_son', 'object')), 'first son');
+  assert.equal(questionGroup(data, row('no_template', 'subject')), 'no template (reverse)');
+  assert.equal(questionGroup(data, { question: 'written row' }), 'Other');
+  assert.equal(questionGroup(null, row('first_son', 'object')), 'first son');
 });

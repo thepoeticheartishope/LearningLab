@@ -67,6 +67,19 @@ function readFacts(data, entities) {
   return out;
 }
 
+// A generated row's group on the Pick screen, by the predicate it asks:
+// the template's `group_object` or `group_subject` (whichever way the row
+// asks), else the predicate in words, "(reverse)" when it asks the subject.
+// A row not made from a fact goes in "Other".
+export function questionGroup(data, q) {
+  const f = q && Array.isArray(q.fromFacts) ? q.fromFacts[0] : null;
+  if (!f || typeof f.predicate !== 'string') return 'Other';
+  const tp = data && typeof data === 'object' && !Array.isArray(data) ? tripleTemplates(data).get(f.predicate) : null;
+  const named = tp && tp['group_' + f.asks];
+  if (typeof named === 'string' && named.trim()) return named.trim();
+  return f.predicate.replaceAll('_', ' ') + (f.asks === 'subject' ? ' (reverse)' : '');
+}
+
 // The facts of facts file `data`, read plainly: { facts, labels }. `facts` are readFacts'
 // (entities looked up, bad rows left out), `labels` each template's label
 // by predicate. An old plain-array file, or none, gives no facts.
