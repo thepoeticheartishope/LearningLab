@@ -16,6 +16,7 @@ import { chosenSetId, setPicker } from '../../shared/sets.js';
 const MASTERY_SET = chosenSetId();
 import { newMasteryRecord, masteryKey, masteryDay, masteryNext, masteryTier, masteryTask, masteryCredits, masteryCounts, settleMastery, evidenceCheck, shiftMasteryTier } from './mastery.js';
 import { loadFactSet } from '../../shared/facts.js';
+import { questionGroup } from '../../shared/factgen.js';
 import { buildChoices } from '../../shared/choices.js';
 import { logAnswer, readLog } from '../../shared/log.js';
 import { answerKey, rightAnswers, escapeHtml } from '../../shared/text.js';
@@ -484,7 +485,19 @@ function drawPick() {
     groups.get(g).push(q);
   });
   groups.forEach((list, name) => {
-    pickBox.append(el('h3', '', name));
+    // The group's heading, with its own pick / unpick and a count.
+    const keys = list.map(masteryKey);
+    const head = el('div', 'row pick-head');
+    const groupCount = el('span', 'muted small', '');
+    const setGroupCount = () => { groupCount.textContent = keys.filter(k => open.picked.has(k)).length + ' of ' + keys.length; };
+    const setGroup = on => { keys.forEach(k => (on ? open.picked.add(k) : open.picked.delete(k))); savePicked(); drawPick(); };
+    const pickGroup = button('Pick group', () => setGroup(true));
+    const unpickGroup = button('Unpick group', () => setGroup(false));
+    pickGroup.setAttribute('aria-label', 'Pick every fact in ' + name);
+    unpickGroup.setAttribute('aria-label', 'Unpick every fact in ' + name);
+    head.append(el('h3', '', name), pickGroup, unpickGroup, groupCount);
+    pickBox.append(head);
+    setGroupCount();
     const ul = el('ul', 'pick-list');
     list.forEach(q => {
       const key = masteryKey(q);
@@ -498,6 +511,7 @@ function drawPick() {
         else open.picked.delete(key);
         savePicked();
         setCount();
+        setGroupCount();
       });
       const seen = open.record.facts[key];
       label.append(box2, ' ' + (q.evidence ? '★ ' : '') + q.question + ' ', el('span', 'muted', '— ' + q.answer));
@@ -586,7 +600,7 @@ async function start() {
     const scenarioKeys = new Set(scenarios.map(masteryKey));
     open.all = [
       ...scenarios.map(q => ({ ...q, group: 'With evidence scenarios' })),
-      ...set.questions.filter(q => !scenarioKeys.has(masteryKey(q))).map(q => ({ ...q, group: groupOf(q) })),
+      ...set.questions.filter(q => !scenarioKeys.has(masteryKey(q))).map(q => ({ ...q, group: questionGroup(set.data, q) })),
     ];
     initStages(open.all, set.data);
     initMap(set.data);
@@ -598,27 +612,6 @@ async function start() {
   if (saved && saved.facts && Array.isArray(saved.log)) open.record = saved;
   open.picked = new Set(loadJson('picked', []));
   showTab(open.picked.size ? 'practise' : 'pick');
-}
-
-// A generated row's group on the Pick screen: by the predicate it asks.
-const GROUPS = {
-  'pin_count:object': 'Connector pins',
-  'module_pins:object': 'Memory module pins',
-  'uses_port:object': 'Port of a protocol',
-  'uses_port:subject': 'Protocol on a port',
-  'used_on:object': 'Cable for a connector',
-  'used_on:subject': 'Connector for a cable',
-  'runs_over:object': 'Transport of a protocol',
-  'runs_over:subject': 'Protocol over a transport',
-  'secure_version:object': 'Secure replacement',
-  'secure_version:subject': 'Older plain-text protocol',
-  'mail_sent_by:object': 'Mail sending protocol',
-};
-function groupOf(q) {
-  const f = q.fromFacts && q.fromFacts[0];
-  if (!f) return 'Other numbers';
-  if (MASTERY_SET !== 'comptia-aplus') return f.predicate.replaceAll('_', ' ') + (f.asks === 'subject' ? ' (reverse)' : '');
-  return GROUPS[f.predicate + ':' + f.asks] || 'Other numbers';
 }
 
 document.querySelector('h1').after(setPicker(MASTERY_SET));
